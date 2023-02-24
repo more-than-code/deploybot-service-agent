@@ -46,7 +46,7 @@ func (h *ContainerHelper) StartContainer(cfg *model.DeployConfig) {
 	h.cli.ContainerStop(ctx, cfg.ServiceName, container.StopOptions{})
 	h.cli.ContainerRemove(ctx, cfg.ServiceName, types.ContainerRemoveOptions{})
 
-	reader, err := h.cli.ImagePull(ctx, cfg.ImageName, types.ImagePullOptions{})
+	reader, err := h.cli.ImagePull(ctx, cfg.ImageName+":"+cfg.ImageTag, types.ImagePullOptions{})
 	if err != nil {
 		panic(err)
 	}

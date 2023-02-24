@@ -8,7 +8,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -128,83 +127,6 @@ func (s *Scheduler) StreamWebhookHandler() gin.HandlerFunc {
 				s.ProcessPostTask(sw.Payload.PipelineId, task.Id, model.TaskDone)
 			}
 		}()
-
-		ctx.JSON(http.StatusOK, api.WebhookResponse{})
-	}
-}
-
-func (s *Scheduler) GhWebhookHandler() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		body, _ := io.ReadAll(ctx.Request.Body)
-
-		var data model.GitHubHookshot
-		json.Unmarshal(body, &data)
-
-		comps := strings.Split(data.Ref, "/")
-		branch := ""
-		imageTag := "latest"
-		if len(comps) == 3 {
-			if comps[1] == "tags" {
-				imageTag = comps[2]
-			} else {
-				branch = comps[2]
-			}
-		}
-
-		res, _ := http.Get(fmt.Sprintf("%s/pipelines?repoWatched=%s&branchWatched=%s&autoRun=true", s.cfg.ApiBaseUrl, data.Repository.Name, branch))
-		body, _ = io.ReadAll(res.Body)
-
-		var plRes api.GetPipelinesResponse
-		json.Unmarshal(body, &plRes)
-
-		for _, pl := range plRes.Payload.Items {
-			// if pl.Status == model.PipelineBusy {
-			// 	continue
-			// }
-
-			if len(pl.Tasks) == 0 {
-				continue
-			}
-
-			t := pl.Tasks[0]
-
-			// if t.Status == model.TaskInProgress {
-			// 	continue
-			// }
-
-			// update task
-			cbs, _ := json.Marshal(data.Commits)
-			cbsStr := string(cbs)
-
-			log.Printf("%s", cbsStr)
-
-			body, _ = json.Marshal(model.UpdateTaskInput{
-				PipelineId: pl.Id,
-				Id:         t.Id,
-				Payload:    model.UpdateTaskInputPayload{Remarks: &cbsStr}})
-			req, _ := http.NewRequest("PATCH", s.cfg.ApiBaseUrl+"/task", bytes.NewReader(body))
-			http.DefaultClient.Do(req)
-
-			// update pipeline
-			args := []string{fmt.Sprintf("IMAGE_TAG=%s", imageTag)}
-
-			body, _ = json.Marshal(model.UpdatePipelineInput{
-				Id:      pl.Id,
-				Payload: model.UpdatePipelineInputPayload{Arguments: args}})
-			req, _ = http.NewRequest("PATCH", s.cfg.ApiBaseUrl+"/pipeline", bytes.NewReader(body))
-			http.DefaultClient.Do(req)
-
-			// call stream webhook
-			body, _ = json.Marshal(model.StreamWebhook{Payload: model.StreamWebhookPayload{PipelineId: pl.Id, TaskId: t.Id, Arguments: args}})
-
-			req, _ = http.NewRequest("POST", t.StreamWebhook, bytes.NewReader(body))
-			req.SetBasicAuth(s.cfg.PkUsername, s.cfg.PkPassword)
-			res, _ := http.DefaultClient.Do(req)
-
-			if res != nil {
-				log.Println(res.Status)
-			}
-		}
 
 		ctx.JSON(http.StatusOK, api.WebhookResponse{})
 	}
