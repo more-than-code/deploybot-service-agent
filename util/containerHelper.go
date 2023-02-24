@@ -46,14 +46,15 @@ func (h *ContainerHelper) StartContainer(cfg *model.DeployConfig) {
 	h.cli.ContainerStop(ctx, cfg.ServiceName, container.StopOptions{})
 	h.cli.ContainerRemove(ctx, cfg.ServiceName, types.ContainerRemoveOptions{})
 
-	reader, err := h.cli.ImagePull(ctx, cfg.ImageName+":"+cfg.ImageTag, types.ImagePullOptions{})
+	imageNameTag := cfg.ImageName + ":" + cfg.ImageTag
+	reader, err := h.cli.ImagePull(ctx, imageNameTag, types.ImagePullOptions{})
 	if err != nil {
 		panic(err)
 	}
 	io.Copy(os.Stdout, reader)
 
 	cConfig := &container.Config{
-		Image: cfg.ImageName,
+		Image: imageNameTag,
 		Env:   cfg.Env,
 	}
 
