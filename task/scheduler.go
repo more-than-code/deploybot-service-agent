@@ -21,9 +21,10 @@ var gTicker *time.Ticker
 var gEventQueue = list.New()
 
 type SchedulerConfig struct {
-	ApiBaseUrl string `envconfig:"API_BASE_URL"`
-	PkUsername string `envconfig:"PK_USERNAME"`
-	PkPassword string `envconfig:"PK_PASSWORD"`
+	ApiBaseUrl     string `envconfig:"API_BASE_URL"`
+	ApiAccessToken string `envconfig:"API_ACCESS_TOKEN"`
+	PkUsername     string `envconfig:"PK_USERNAME"`
+	PkPassword     string `envconfig:"PK_PASSWORD"`
 }
 
 type Scheduler struct {
@@ -60,6 +61,7 @@ func (s *Scheduler) updateTaskStatus(pipelineId, taskId primitive.ObjectID, stat
 		Payload:    model.UpdateTaskStatusInputPayload{Status: status}})
 
 	req, _ := http.NewRequest("PUT", s.cfg.ApiBaseUrl+"/taskStatus", bytes.NewReader(body))
+	req.Header.Set("Authorization", "Bearer "+s.cfg.ApiAccessToken)
 	http.DefaultClient.Do(req)
 }
 
@@ -70,6 +72,7 @@ func (s *Scheduler) ProcessPostTask(pipelineId, taskId primitive.ObjectID, statu
 		Payload:    model.UpdateTaskStatusInputPayload{Status: status}})
 
 	req, _ := http.NewRequest("PUT", s.cfg.ApiBaseUrl+"/taskStatus", bytes.NewReader(body))
+	req.Header.Set("Authorization", "Bearer "+s.cfg.ApiAccessToken)
 	http.DefaultClient.Do(req)
 }
 
@@ -82,7 +85,10 @@ func (s *Scheduler) StreamWebhookHandler() gin.HandlerFunc {
 
 		log.Println(sw.Payload)
 
-		res, err := http.Get(fmt.Sprintf("%s/task/%s/%s", s.cfg.ApiBaseUrl, sw.Payload.PipelineId.Hex(), sw.Payload.TaskId.Hex()))
+		req, _ := http.NewRequest("GET", fmt.Sprintf("%s/task/%s/%s", s.cfg.ApiBaseUrl, sw.Payload.PipelineId.Hex(), sw.Payload.TaskId.Hex()), nil)
+		req.Header.Set("Authorization", "Bearer "+s.cfg.ApiAccessToken)
+
+		res, err := http.DefaultClient.Do(req)
 
 		if err != nil {
 			log.Println(err)
