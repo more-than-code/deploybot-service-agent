@@ -22,6 +22,8 @@ github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ3
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1 h1:CaO/zOnF8VvUfEbhRatPcwKVWamvbYd8tQGRWacE9kU=
+github.com/dgrijalva/jwt-go/v4 v4.0.0-preview1/go.mod h1:+hnT3ywWDTAFrW5aE+u2Sa/wT555ZqwoCS+pk3p6ry4=
 github.com/docker/distribution v2.8.1+incompatible h1:Q50tZOPR6T/hjNsyc9g8/syEs6bk8XXApsHjKukMl68=
 github.com/docker/distribution v2.8.1+incompatible/go.mod h1:J2gT2udsDAN96Uj4KfcMRqY0/ypR+oyYUYmja8H+y+w=
 github.com/docker/docker v23.0.1+incompatible h1:vjgvJZxprTTE1A37nm+CLNAdwu6xZekyoiVlUZEINcY=
@@ -104,8 +106,12 @@ github.com/modern-go/reflect2 v1.0.2 h1:xBagoLtFs94CBntxluKeaWgTMpvLxC4ur3nMaC9G
 github.com/modern-go/reflect2 v1.0.2/go.mod h1:yWuevngMOJpCy52FWWMvUC8ws7m/LJsjYzDa0/r8luk=
 github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe h1:iruDEfMl2E6fbMZ9s0scYfZQ84/6SPL6zC8ACM2oIL0=
 github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe/go.mod h1:wL8QJuTMNUDYhXwkmfOly8iTdp5TEcJFWZD2D7SIkUc=
+github.com/more-than-code/auth-helper v0.0.0-20221005122945-c5218a67647e h1:DzAv99di+c4h7SOYfYLcdpedulAP+wV0x+FkWmiBLEk=
+github.com/more-than-code/auth-helper v0.0.0-20221005122945-c5218a67647e/go.mod h1:pdcYo6rb+0Y5pbhLLYidhVFAmk424GybF06cdfm0rLE=
 github.com/more-than-code/deploybot-service-api v0.0.0-20230224050336-192cf71ccd21 h1:PQV3y0kEhva7knUq+s/qGHx+6Cl05WYbpJwEvN47uP4=
 github.com/more-than-code/deploybot-service-api v0.0.0-20230224050336-192cf71ccd21/go.mod h1:sLeBXnJel9atpK3cAli8XNPhRiXWjgXAt/hZbmgMthU=
+github.com/more-than-code/deploybot-service-api v0.0.0-20230303152803-39c8848a1ff5 h1:WwBwI4mvkyKUn4Dk3rdDFdSUoFbzYYAyfJikY9zlYxs=
+github.com/more-than-code/deploybot-service-api v0.0.0-20230303152803-39c8848a1ff5/go.mod h1:v1RngbQ72PdUMlQrNQD82jnFYj0NTzoOy7Tt8VwX0Ww=
 github.com/morikuni/aec v1.0.0 h1:nP9CBfwrvYnBRgY6qfDQkygYDmYwOilePFkwzv4dU8A=
 github.com/morikuni/aec v1.0.0/go.mod h1:BbKIizmSmc5MMPqRYbxO4ZU0S0+P200+tUnFx7PXmsc=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=
