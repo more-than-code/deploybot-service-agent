@@ -22,8 +22,8 @@ func main() {
 	g := gin.Default()
 
 	t := task.NewScheduler()
-	g.POST("/launcherStreamWebhook", t.StreamWebhookHandler())
-	g.GET("/launcherHealthCheck", t.HealthCheckHandler())
+	g.POST("/streamWebhook", t.StreamWebhookHandler())
+	g.GET("/healthCheck", t.HealthCheckHandler())
 
 	g.Run(fmt.Sprintf(":%d", cfg.ServerPort))
 }
