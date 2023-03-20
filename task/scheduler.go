@@ -58,7 +58,7 @@ func (s *Scheduler) updateTaskStatus(pipelineId, taskId primitive.ObjectID, stat
 	body, _ := json.Marshal(model.UpdateTaskStatusInput{
 		PipelineId: pipelineId,
 		TaskId:     taskId,
-		Payload:    model.UpdateTaskStatusInputPayload{Status: status}})
+		Task:       struct{ Status string }{Status: status}})
 
 	req, _ := http.NewRequest("PUT", s.cfg.ApiBaseUrl+"/taskStatus", bytes.NewReader(body))
 	req.Header.Set("Authorization", "Bearer "+s.cfg.ApiAccessToken)
@@ -69,7 +69,7 @@ func (s *Scheduler) ProcessPostTask(pipelineId, taskId primitive.ObjectID, statu
 	body, _ := json.Marshal(model.UpdateTaskStatusInput{
 		PipelineId: pipelineId,
 		TaskId:     taskId,
-		Payload:    model.UpdateTaskStatusInputPayload{Status: status}})
+		Task:       struct{ Status string }{Status: status}})
 
 	req, _ := http.NewRequest("PUT", s.cfg.ApiBaseUrl+"/taskStatus", bytes.NewReader(body))
 	req.Header.Set("Authorization", "Bearer "+s.cfg.ApiAccessToken)
@@ -120,7 +120,7 @@ func (s *Scheduler) StreamWebhookHandler() gin.HandlerFunc {
 
 		go func() {
 			s.updateTaskStatus(sw.Payload.PipelineId, task.Id, model.TaskInProgress)
-			err := s.runner.DoTask(*task, sw.Payload.Arguments)
+			err := s.runner.DoTask(task, sw.Payload.Arguments)
 
 			if timer != nil {
 				timer.Stop()
