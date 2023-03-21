@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/docker/docker/api/types"
+	dTypes "github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
@@ -13,7 +13,7 @@ import (
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/go-connections/nat"
 	"github.com/kelseyhightower/envconfig"
-	"github.com/more-than-code/deploybot-service-api/model"
+	types "github.com/more-than-code/deploybot-service-launcher/deploybot-types"
 )
 
 type ContainerHelperConfig struct {
@@ -40,14 +40,14 @@ func NewContainerHelper(host string) *ContainerHelper {
 	return &ContainerHelper{cli: cli, cfg: cfg}
 }
 
-func (h *ContainerHelper) StartContainer(cfg *model.DeployConfig) {
+func (h *ContainerHelper) StartContainer(cfg *types.DeployConfig) {
 	ctx := context.Background()
 
 	h.cli.ContainerStop(ctx, cfg.ServiceName, container.StopOptions{})
-	h.cli.ContainerRemove(ctx, cfg.ServiceName, types.ContainerRemoveOptions{})
+	h.cli.ContainerRemove(ctx, cfg.ServiceName, dTypes.ContainerRemoveOptions{})
 
 	imageNameTag := cfg.ImageName + ":" + cfg.ImageTag
-	reader, err := h.cli.ImagePull(ctx, imageNameTag, types.ImagePullOptions{})
+	reader, err := h.cli.ImagePull(ctx, imageNameTag, dTypes.ImagePullOptions{})
 	if err != nil {
 		panic(err)
 	}
@@ -86,7 +86,7 @@ func (h *ContainerHelper) StartContainer(cfg *model.DeployConfig) {
 		panic(err)
 	}
 
-	if err := h.cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+	if err := h.cli.ContainerStart(ctx, resp.ID, dTypes.ContainerStartOptions{}); err != nil {
 		panic(err)
 	}
 
@@ -100,7 +100,7 @@ func (h *ContainerHelper) StartContainer(cfg *model.DeployConfig) {
 	case <-statusCh:
 	}
 
-	out, err := h.cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{ShowStdout: true})
+	out, err := h.cli.ContainerLogs(ctx, resp.ID, dTypes.ContainerLogsOptions{ShowStdout: true})
 	if err != nil {
 		panic(err)
 	}
@@ -108,6 +108,6 @@ func (h *ContainerHelper) StartContainer(cfg *model.DeployConfig) {
 	stdcopy.StdCopy(os.Stdout, os.Stderr, out)
 }
 
-func (h *ContainerHelper) RestartContainer(cfg *model.RestartConfig) error {
+func (h *ContainerHelper) RestartContainer(cfg *types.RestartConfig) error {
 	return h.cli.ContainerRestart(context.Background(), cfg.ServiceName, container.StopOptions{})
 }
