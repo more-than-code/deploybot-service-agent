@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 
+	types "deploybot-service-launcher/deploybot-types"
+
 	dTypes "github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
@@ -14,7 +16,6 @@ import (
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/go-connections/nat"
 	"github.com/kelseyhightower/envconfig"
-	types "github.com/more-than-code/deploybot-service-launcher/deploybot-types"
 )
 
 type ContainerHelperConfig struct {

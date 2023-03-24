@@ -3,9 +3,10 @@ package task
 import (
 	"encoding/json"
 
+	types "deploybot-service-launcher/deploybot-types"
+	"deploybot-service-launcher/util"
+
 	"github.com/kelseyhightower/envconfig"
-	types "github.com/more-than-code/deploybot-service-launcher/deploybot-types"
-	"github.com/more-than-code/deploybot-service-launcher/util"
 )
 
 type RunnerConfig struct {

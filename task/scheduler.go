@@ -10,9 +10,10 @@ import (
 	"net/http"
 	"time"
 
+	types "deploybot-service-launcher/deploybot-types"
+
 	"github.com/gin-gonic/gin"
 	"github.com/kelseyhightower/envconfig"
-	types "github.com/more-than-code/deploybot-service-launcher/deploybot-types"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

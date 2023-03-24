@@ -3,9 +3,10 @@ package main
 import (
 	"fmt"
 
+	"deploybot-service-launcher/task"
+
 	"github.com/gin-gonic/gin"
 	"github.com/kelseyhightower/envconfig"
-	"github.com/more-than-code/deploybot-service-launcher/task"
 )
 
 type Config struct {

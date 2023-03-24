@@ -3,7 +3,7 @@ package task
 import (
 	"testing"
 
-	types "github.com/more-than-code/deploybot-service-launcher/deploybot-types"
+	types "deploybot-service-launcher/deploybot-types"
 )
 
 func TestRunContainer(t *testing.T) {

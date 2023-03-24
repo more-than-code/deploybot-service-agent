@@ -1,4 +1,4 @@
-module github.com/more-than-code/deploybot-service-launcher
+module deploybot-service-launcher
 
 go 1.19
 
