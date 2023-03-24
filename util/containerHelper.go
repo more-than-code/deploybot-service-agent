@@ -3,6 +3,7 @@ package util
 import (
 	"context"
 	"io"
+	"log"
 	"os"
 
 	dTypes "github.com/docker/docker/api/types"
@@ -49,7 +50,8 @@ func (h *ContainerHelper) StartContainer(cfg *types.DeployConfig) {
 	imageNameTag := cfg.ImageName + ":" + cfg.ImageTag
 	reader, err := h.cli.ImagePull(ctx, imageNameTag, dTypes.ImagePullOptions{})
 	if err != nil {
-		panic(err)
+		log.Print(err)
+		return
 	}
 	io.Copy(os.Stdout, reader)
 
@@ -83,11 +85,13 @@ func (h *ContainerHelper) StartContainer(cfg *types.DeployConfig) {
 
 	resp, err := h.cli.ContainerCreate(ctx, cConfig, hConfig, nConfig, nil, cfg.ServiceName)
 	if err != nil {
-		panic(err)
+		log.Print(err)
+		return
 	}
 
 	if err := h.cli.ContainerStart(ctx, resp.ID, dTypes.ContainerStartOptions{}); err != nil {
-		panic(err)
+		log.Print(err)
+		return
 	}
 
 	statusCh, errCh := h.cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
@@ -95,14 +99,16 @@ func (h *ContainerHelper) StartContainer(cfg *types.DeployConfig) {
 	select {
 	case err := <-errCh:
 		if err != nil {
-			panic(err)
+			log.Print(err)
+			return
 		}
 	case <-statusCh:
 	}
 
 	out, err := h.cli.ContainerLogs(ctx, resp.ID, dTypes.ContainerLogsOptions{ShowStdout: true})
 	if err != nil {
-		panic(err)
+		log.Print(err)
+		return
 	}
 
 	stdcopy.StdCopy(os.Stdout, os.Stderr, out)
