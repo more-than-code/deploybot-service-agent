@@ -2,31 +2,22 @@ package task
 
 import (
 	"encoding/json"
+	"io"
+	"net/http"
 
 	types "deploybot-service-launcher/deploybot-types"
 	"deploybot-service-launcher/util"
 
-	"github.com/kelseyhightower/envconfig"
+	"github.com/gin-gonic/gin"
 )
 
-type RunnerConfig struct {
-	ProjectsPath string `envconfig:"PROJECTS_PATH"`
-	DockerHost   string `envconfig:"DOCKER_HOST"`
-}
-
 type Runner struct {
-	cfg     RunnerConfig
 	cHelper *util.ContainerHelper
 }
 
 func NewRunner() *Runner {
-	var cfg RunnerConfig
-	err := envconfig.Process("", &cfg)
-	if err != nil {
-		panic(err)
-	}
 
-	return &Runner{cfg: cfg, cHelper: util.NewContainerHelper(cfg.DockerHost)}
+	return &Runner{util.NewContainerHelper()}
 }
 
 func (r *Runner) DoTask(t types.Task, arguments []string) error {
@@ -50,4 +41,25 @@ func (r *Runner) DoTask(t types.Task, arguments []string) error {
 	}()
 
 	return nil
+}
+
+func (s *Runner) ServiceLogHandler() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		name := ctx.Query("name")
+		out, err := s.cHelper.LogContainer(ctx, name)
+
+		if err != nil {
+			ctx.String(http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		bs, err := io.ReadAll(out)
+
+		if err != nil {
+			ctx.String(http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		ctx.String(http.StatusOK, string(bs))
+	}
 }

@@ -28,7 +28,7 @@ type SchedulerConfig struct {
 }
 
 type Scheduler struct {
-	runner *Runner
+	Runner *Runner
 	cfg    SchedulerConfig
 }
 
@@ -39,7 +39,7 @@ func NewScheduler() *Scheduler {
 		panic(err)
 	}
 
-	return &Scheduler{runner: NewRunner(), cfg: cfg}
+	return &Scheduler{Runner: NewRunner(), cfg: cfg}
 }
 
 func (s *Scheduler) PushEvent(e types.Event) {
@@ -120,7 +120,7 @@ func (s *Scheduler) StreamWebhookHandler() gin.HandlerFunc {
 
 		go func() {
 			s.updateTaskStatus(sw.Payload.PipelineId, task.Id, types.TaskInProgress)
-			err := s.runner.DoTask(task, sw.Payload.Arguments)
+			err := s.Runner.DoTask(task, sw.Payload.Arguments)
 
 			if timer != nil {
 				timer.Stop()

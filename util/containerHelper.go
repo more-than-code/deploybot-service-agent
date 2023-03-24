@@ -21,6 +21,7 @@ import (
 type ContainerHelperConfig struct {
 	DhUsername string `envconfig:"DH_USERNAME"`
 	DhPassword string `envconfig:"DH_PASSWORD"`
+	DockerHost string `envconfig:"DOCKER_HOST"`
 }
 
 type ContainerHelper struct {
@@ -28,14 +29,14 @@ type ContainerHelper struct {
 	cfg ContainerHelperConfig
 }
 
-func NewContainerHelper(host string) *ContainerHelper {
+func NewContainerHelper() *ContainerHelper {
 	var cfg ContainerHelperConfig
 	err := envconfig.Process("", &cfg)
 	if err != nil {
 		panic(err)
 	}
 
-	cli, err := client.NewClientWithOpts(client.WithHost(host), client.WithAPIVersionNegotiation())
+	cli, err := client.NewClientWithOpts(client.WithHost(cfg.DockerHost), client.WithAPIVersionNegotiation())
 	if err != nil {
 		panic(err)
 	}
@@ -117,4 +118,8 @@ func (h *ContainerHelper) StartContainer(cfg *types.DeployConfig) {
 
 func (h *ContainerHelper) RestartContainer(cfg *types.RestartConfig) error {
 	return h.cli.ContainerRestart(context.Background(), cfg.ServiceName, container.StopOptions{})
+}
+
+func (h *ContainerHelper) LogContainer(ctx context.Context, containerName string) (io.ReadCloser, error) {
+	return h.cli.ContainerLogs(ctx, containerName, dTypes.ContainerLogsOptions{ShowStdout: true})
 }
