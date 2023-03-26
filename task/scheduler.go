@@ -118,8 +118,10 @@ func (s *Scheduler) StreamWebhookHandler() gin.HandlerFunc {
 			})
 		}
 
+		s.updateTaskStatus(sw.Payload.PipelineId, task.Id, types.TaskInProgress)
+		ctx.JSON(http.StatusOK, types.WebhookResponse{})
+
 		go func() {
-			s.updateTaskStatus(sw.Payload.PipelineId, task.Id, types.TaskInProgress)
 			err := s.Runner.DoTask(task, sw.Payload.Arguments)
 
 			if timer != nil {
@@ -133,8 +135,6 @@ func (s *Scheduler) StreamWebhookHandler() gin.HandlerFunc {
 				s.ProcessPostTask(sw.Payload.PipelineId, task.Id, types.TaskDone)
 			}
 		}()
-
-		ctx.JSON(http.StatusOK, types.WebhookResponse{})
 	}
 }
 
