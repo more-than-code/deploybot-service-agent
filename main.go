@@ -24,7 +24,6 @@ func main() {
 
 	t := task.NewScheduler()
 	g.POST("/streamWebhook", t.StreamWebhookHandler())
-	g.GET("/serviceLogs", t.Runner.ServiceLogHandler())
 	g.GET("/healthCheck", t.HealthCheckHandler())
 
 	g.Run(fmt.Sprintf(":%d", cfg.ServerPort))
