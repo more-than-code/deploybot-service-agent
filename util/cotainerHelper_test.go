@@ -1,9 +1,11 @@
 package util
 
 import (
+	"bytes"
 	"context"
-	"io"
 	"testing"
+
+	"github.com/docker/docker/pkg/stdcopy"
 )
 
 func TestLogContainer(t *testing.T) {
@@ -14,7 +16,9 @@ func TestLogContainer(t *testing.T) {
 		t.Error(err)
 	}
 
-	bs, _ := io.ReadAll(out)
+	var buf bytes.Buffer
 
-	t.Log(bs)
+	stdcopy.StdCopy(&buf, &buf, out)
+
+	t.Log(buf.String())
 }

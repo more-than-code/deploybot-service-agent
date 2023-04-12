@@ -1,13 +1,14 @@
 package task
 
 import (
+	"bytes"
 	"encoding/json"
-	"io"
 	"net/http"
 
 	types "deploybot-service-launcher/deploybot-types"
 	"deploybot-service-launcher/util"
 
+	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/gin-gonic/gin"
 )
 
@@ -53,13 +54,15 @@ func (s *Runner) ServiceLogHandler() gin.HandlerFunc {
 			return
 		}
 
-		bs, err := io.ReadAll(out)
+		var buf bytes.Buffer
+
+		_, err = stdcopy.StdCopy(&buf, &buf, out)
 
 		if err != nil {
 			ctx.String(http.StatusInternalServerError, err.Error())
 			return
 		}
 
-		ctx.String(http.StatusOK, string(bs))
+		ctx.String(http.StatusOK, buf.String())
 	}
 }
