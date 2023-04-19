@@ -13,7 +13,6 @@ import (
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
-	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/docker/go-connections/nat"
 	"github.com/kelseyhightower/envconfig"
 )
@@ -66,6 +65,10 @@ func (h *ContainerHelper) StartContainer(cfg *types.DeployConfig) {
 		cConfig.ExposedPorts = nat.PortSet{nat.Port(cfg.ExposedPort + "/tcp"): struct{}{}}
 	}
 
+	if cfg.RestartPolicy == "" {
+		cfg.RestartPolicy = "on-failure"
+	}
+
 	hConfig := &container.HostConfig{
 		AutoRemove:    cfg.AutoRemove,
 		RestartPolicy: container.RestartPolicy{Name: cfg.RestartPolicy},
@@ -96,24 +99,24 @@ func (h *ContainerHelper) StartContainer(cfg *types.DeployConfig) {
 		return
 	}
 
-	statusCh, errCh := h.cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
+	// statusCh, errCh := h.cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
 
-	select {
-	case err := <-errCh:
-		if err != nil {
-			log.Print(err)
-			return
-		}
-	case <-statusCh:
-	}
+	// select {
+	// case err := <-errCh:
+	// 	if err != nil {
+	// 		log.Print(err)
+	// 		return
+	// 	}
+	// case <-statusCh:
+	// }
 
-	out, err := h.cli.ContainerLogs(ctx, resp.ID, dTypes.ContainerLogsOptions{ShowStdout: true})
-	if err != nil {
-		log.Print(err)
-		return
-	}
+	// out, err := h.cli.ContainerLogs(ctx, resp.ID, dTypes.ContainerLogsOptions{ShowStdout: true})
+	// if err != nil {
+	// 	log.Print(err)
+	// 	return
+	// }
 
-	stdcopy.StdCopy(os.Stdout, os.Stderr, out)
+	// stdcopy.StdCopy(os.Stdout, os.Stderr, out)
 }
 
 func (h *ContainerHelper) RestartContainer(cfg *types.RestartConfig) error {
