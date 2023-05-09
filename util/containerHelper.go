@@ -75,7 +75,7 @@ func (h *ContainerHelper) StartContainer(cfg *types.DeployConfig) {
 	}
 
 	if cfg.HostPort != "" {
-		hConfig.PortBindings = nat.PortMap{nat.Port(cfg.HostPort + "/tcp"): []nat.PortBinding{{HostPort: cfg.HostPort, HostIP: "0.0.0.0"}}}
+		hConfig.PortBindings = nat.PortMap{nat.Port(cfg.ExposedPort + "/tcp"): []nat.PortBinding{{HostPort: cfg.HostPort, HostIP: "0.0.0.0"}}}
 	}
 
 	if cfg.MountSource != "" && cfg.MountTarget != "" {
