@@ -1,7 +1,7 @@
 package main
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 )
@@ -14,7 +14,7 @@ func TestServiceLogHandler(t *testing.T) {
 	}
 
 	defer res.Body.Close()
-	out, err := ioutil.ReadAll(res.Body)
+	out, err := io.ReadAll(res.Body)
 	if err != nil {
 		t.Log(err)
 	}
