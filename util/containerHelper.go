@@ -46,7 +46,7 @@ func (h *ContainerHelper) StartContainer(cfg *types.DeployConfig) {
 	ctx := context.Background()
 
 	h.cli.ContainerStop(ctx, cfg.ServiceName, container.StopOptions{})
-	h.cli.ContainerRemove(ctx, cfg.ServiceName, dTypes.ContainerRemoveOptions{})
+	h.cli.ContainerRemove(ctx, cfg.ServiceName, container.RemoveOptions{})
 
 	imageNameTag := cfg.ImageName + ":" + cfg.ImageTag
 	reader, err := h.cli.ImagePull(ctx, imageNameTag, dTypes.ImagePullOptions{})
@@ -65,13 +65,13 @@ func (h *ContainerHelper) StartContainer(cfg *types.DeployConfig) {
 		cConfig.ExposedPorts = nat.PortSet{nat.Port(cfg.ExposedPort + "/tcp"): struct{}{}}
 	}
 
-	if cfg.RestartPolicy == "" {
-		cfg.RestartPolicy = "on-failure"
+	if cfg.RestartPolicy.Name == "" {
+		cfg.RestartPolicy.Name = "on-failure"
 	}
 
 	hConfig := &container.HostConfig{
 		AutoRemove:    cfg.AutoRemove,
-		RestartPolicy: container.RestartPolicy{Name: cfg.RestartPolicy},
+		RestartPolicy: cfg.RestartPolicy,
 	}
 
 	if cfg.HostPort != "" {
@@ -94,7 +94,7 @@ func (h *ContainerHelper) StartContainer(cfg *types.DeployConfig) {
 		return
 	}
 
-	if err := h.cli.ContainerStart(ctx, resp.ID, dTypes.ContainerStartOptions{}); err != nil {
+	if err := h.cli.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
 		log.Print(err)
 		return
 	}
@@ -124,11 +124,11 @@ func (h *ContainerHelper) RestartContainer(cfg *types.RestartConfig) error {
 }
 
 func (h *ContainerHelper) LogContainer(ctx context.Context, containerName string) (io.ReadCloser, error) {
-	return h.cli.ContainerLogs(ctx, containerName, dTypes.ContainerLogsOptions{ShowStdout: true})
+	return h.cli.ContainerLogs(ctx, containerName, container.LogsOptions{ShowStdout: true})
 }
 
 func (h *ContainerHelper) RemoveContainer(ctx context.Context, containerName string) error {
-	return h.cli.ContainerRemove(ctx, containerName, dTypes.ContainerRemoveOptions{Force: true})
+	return h.cli.ContainerRemove(ctx, containerName, container.RemoveOptions{Force: true})
 }
 
 func (h *ContainerHelper) StopContainer(ctx context.Context, containerName string) error {
