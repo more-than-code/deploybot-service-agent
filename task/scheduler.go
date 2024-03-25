@@ -14,7 +14,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kelseyhightower/envconfig"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var gTicker *time.Ticker
@@ -52,7 +51,7 @@ func (s *Scheduler) PullEvent() types.Event {
 	return e.Value.(types.Event)
 }
 
-func (s *Scheduler) updateTaskStatus(pipelineId, taskId primitive.ObjectID, status string) {
+func (s *Scheduler) updateTaskStatus(pipelineId, taskId types.ObjectId, status string) {
 	body, _ := json.Marshal(types.UpdateTaskStatusInput{
 		PipelineId: pipelineId,
 		TaskId:     taskId,
@@ -63,7 +62,7 @@ func (s *Scheduler) updateTaskStatus(pipelineId, taskId primitive.ObjectID, stat
 	http.DefaultClient.Do(req)
 }
 
-func (s *Scheduler) ProcessPostTask(pipelineId, taskId primitive.ObjectID, status string) {
+func (s *Scheduler) ProcessPostTask(pipelineId, taskId types.ObjectId, status string) {
 	body, _ := json.Marshal(types.UpdateTaskStatusInput{
 		PipelineId: pipelineId,
 		TaskId:     taskId,

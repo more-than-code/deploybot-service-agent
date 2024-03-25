@@ -6,7 +6,6 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/kelseyhightower/envconfig"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 type Config struct {
@@ -36,23 +35,6 @@ func CloneRepo(path, cloneUrl string) error {
 	}
 
 	return nil
-}
-
-func StructToBsonDoc(source interface{}) bson.M {
-	bytes, err := bson.Marshal(source)
-
-	if err != nil {
-		return nil
-	}
-
-	doc := bson.M{}
-	err = bson.Unmarshal(bytes, &doc)
-
-	if err != nil {
-		return nil
-	}
-
-	return doc
 }
 
 func InterfaceOfSliceToMap(source []interface{}) map[string]interface{} {

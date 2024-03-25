@@ -71,7 +71,7 @@ func (h *ContainerHelper) StartContainer(cfg *types.DeployConfig) {
 
 	hConfig := &container.HostConfig{
 		AutoRemove:    cfg.AutoRemove,
-		RestartPolicy: cfg.RestartPolicy,
+		RestartPolicy: container.RestartPolicy{Name: container.RestartPolicyMode(cfg.RestartPolicy.Name), MaximumRetryCount: cfg.RestartPolicy.MaximumRetryCount},
 	}
 
 	if cfg.HostPort != "" {
