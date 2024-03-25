@@ -126,3 +126,11 @@ func (h *ContainerHelper) RestartContainer(cfg *types.RestartConfig) error {
 func (h *ContainerHelper) LogContainer(ctx context.Context, containerName string) (io.ReadCloser, error) {
 	return h.cli.ContainerLogs(ctx, containerName, dTypes.ContainerLogsOptions{ShowStdout: true})
 }
+
+func (h *ContainerHelper) RemoveContainer(ctx context.Context, containerName string) error {
+	return h.cli.ContainerRemove(ctx, containerName, dTypes.ContainerRemoveOptions{Force: true})
+}
+
+func (h *ContainerHelper) StopContainer(ctx context.Context, containerName string) error {
+	return h.cli.ContainerStop(ctx, containerName, container.StopOptions{})
+}

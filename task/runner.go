@@ -32,6 +32,15 @@ func (r *Runner) DoTask(t types.Task, arguments []string) error {
 		return err
 	}
 
+	if c.FilesToMount != nil {
+		for _, f := range c.FilesToMount {
+			err = util.WriteToFile(c.MountSource+"/"+f.Name, f.Content)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	go func() {
 		r.cHelper.StartContainer(&c)
 	}()
