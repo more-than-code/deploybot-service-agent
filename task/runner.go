@@ -16,11 +16,11 @@ func NewRunner() *Runner {
 	return &Runner{util.NewContainerHelper()}
 }
 
-func (r *Runner) DoTask(t types.Task, arguments []string) error {
+func (r *Runner) DoTask(conf interface{}, arguments []string) error {
 
 	var c types.DeployConfig
 
-	bs, err := json.Marshal(t.Config)
+	bs, err := json.Marshal(conf)
 
 	if err != nil {
 		return err

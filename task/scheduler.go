@@ -119,7 +119,7 @@ func (s *Scheduler) StreamWebhookHandler() gin.HandlerFunc {
 		ctx.JSON(http.StatusOK, types.WebhookResponse{})
 
 		go func() {
-			err := s.Runner.DoTask(task, sw.Payload.Arguments)
+			err := s.Runner.DoTask(task.Config, sw.Payload.Arguments)
 
 			if timer != nil {
 				timer.Stop()
