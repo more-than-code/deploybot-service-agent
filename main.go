@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 
 	"deploybot-service-launcher/task"
 
@@ -10,7 +11,9 @@ import (
 )
 
 type Config struct {
-	ServerPort int `envconfig:"SERVER_PORT"`
+	ServerPort string `envconfig:"SERVER_PORT"`
+	ServerCrt  string `envconfig:"SERVER_CRT"`
+	ServerKey  string `envconfig:"SERVER_KEY"`
 }
 
 func main() {
@@ -26,5 +29,13 @@ func main() {
 	g.POST("/streamWebhook", t.StreamWebhookHandler())
 	g.GET("/healthCheck", t.HealthCheckHandler())
 
-	g.Run(fmt.Sprintf(":%d", cfg.ServerPort))
+	tlsConfig := &http.Server{
+		Addr:    cfg.ServerPort,
+		Handler: g,
+	}
+
+	err = tlsConfig.ListenAndServeTLS(cfg.ServerCrt, cfg.ServerKey)
+	if err != nil {
+		fmt.Println("Error starting server:", err)
+	}
 }
