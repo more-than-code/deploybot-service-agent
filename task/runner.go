@@ -32,9 +32,9 @@ func (r *Runner) DoTask(conf interface{}, arguments []string) error {
 		return err
 	}
 
-	if c.FilesToMount != nil {
-		for _, f := range c.FilesToMount {
-			err = util.WriteToFile(f.Name, f.Content)
+	if c.Files != nil {
+		for name, content := range c.Files {
+			err = util.WriteToFile(name, content)
 			if err != nil {
 				return err
 			}

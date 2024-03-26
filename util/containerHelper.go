@@ -61,12 +61,8 @@ func (h *ContainerHelper) StartContainer(cfg *types.DeployConfig) {
 		Env:   cfg.Env,
 	}
 
-	if cfg.ExposedPort != "" {
-		cConfig.ExposedPorts = nat.PortSet{nat.Port(cfg.ExposedPort + "/tcp"): struct{}{}}
-	}
-
 	if cfg.RestartPolicy.Name == "" {
-		cfg.RestartPolicy.Name = "on-failure"
+		cfg.RestartPolicy.Name = "always"
 	}
 
 	hConfig := &container.HostConfig{
@@ -74,12 +70,22 @@ func (h *ContainerHelper) StartContainer(cfg *types.DeployConfig) {
 		RestartPolicy: container.RestartPolicy{Name: container.RestartPolicyMode(cfg.RestartPolicy.Name), MaximumRetryCount: cfg.RestartPolicy.MaximumRetryCount},
 	}
 
-	if cfg.HostPort != "" {
-		hConfig.PortBindings = nat.PortMap{nat.Port(cfg.ExposedPort + "/tcp"): []nat.PortBinding{{HostPort: cfg.HostPort, HostIP: "0.0.0.0"}}}
+	if cfg.Ports == nil {
+		cConfig.ExposedPorts = nat.PortSet{}
+		for e := range cfg.Ports {
+			cConfig.ExposedPorts[nat.Port(e+"/tcp")] = struct{}{}
+		}
+
+		hConfig.PortBindings = nat.PortMap{}
+		for e, h := range cfg.Ports {
+			hConfig.PortBindings[nat.Port(e+"/tcp")] = []nat.PortBinding{{HostPort: h, HostIP: ""}}
+		}
 	}
 
-	if cfg.MountSource != "" && cfg.MountTarget != "" {
-		hConfig.Mounts = []mount.Mount{{Type: "bind", Source: cfg.MountSource, Target: cfg.MountTarget}}
+	if cfg.VolumeMounts == nil {
+		for s, t := range cfg.VolumeMounts {
+			hConfig.Mounts = append(hConfig.Mounts, mount.Mount{Type: mount.TypeBind, Source: s, Target: t})
+		}
 	}
 
 	nConfig := &network.NetworkingConfig{}

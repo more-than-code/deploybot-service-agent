@@ -28,10 +28,9 @@ func TestStartContainer(t *testing.T) {
 	h := NewContainerHelper()
 
 	h.StartContainer(&types.DeployConfig{
-		ImageName:   "binartist/messaging",
-		ImageTag:    "latest",
-		ExposedPort: "8002",
-		HostPort:    "8082",
+		ImageName: "binartist/messaging",
+		ImageTag:  "latest",
+		Ports:     map[string]string{"8002": "8002"},
 		Env: []string{
 			"SERVER_PORT=:8002",
 			"SMS_TEMPLATE_CODE=SMS_181853823",

@@ -48,14 +48,14 @@ func InterfaceOfSliceToMap(source []interface{}) map[string]interface{} {
 	return m
 }
 
-func WriteToFile(path, content string) error {
+func WriteToFile(path string, content []byte) error {
 	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	_, err = file.WriteString(content)
+	_, err = file.Write(content)
 	if err != nil {
 		return err
 	}
