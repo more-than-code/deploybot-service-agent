@@ -70,7 +70,7 @@ func (h *ContainerHelper) StartContainer(cfg *types.DeployConfig) {
 		RestartPolicy: container.RestartPolicy{Name: container.RestartPolicyMode(cfg.RestartPolicy.Name), MaximumRetryCount: cfg.RestartPolicy.MaximumRetryCount},
 	}
 
-	if cfg.Ports == nil {
+	if cfg.Ports != nil {
 		cConfig.ExposedPorts = nat.PortSet{}
 		for e := range cfg.Ports {
 			cConfig.ExposedPorts[nat.Port(e+"/tcp")] = struct{}{}
