@@ -82,7 +82,7 @@ func (h *ContainerHelper) StartContainer(cfg *types.DeployConfig) {
 		}
 	}
 
-	if cfg.VolumeMounts == nil {
+	if cfg.VolumeMounts != nil {
 		for s, t := range cfg.VolumeMounts {
 			hConfig.Mounts = append(hConfig.Mounts, mount.Mount{Type: mount.TypeBind, Source: s, Target: t})
 		}
