@@ -72,18 +72,18 @@ func (h *ContainerHelper) StartContainer(cfg *types.DeployConfig) {
 
 	if cfg.Ports == nil {
 		cConfig.ExposedPorts = nat.PortSet{}
-		for e := range *cfg.Ports {
+		for e := range cfg.Ports {
 			cConfig.ExposedPorts[nat.Port(e+"/tcp")] = struct{}{}
 		}
 
 		hConfig.PortBindings = nat.PortMap{}
-		for e, h := range *cfg.Ports {
+		for e, h := range cfg.Ports {
 			hConfig.PortBindings[nat.Port(e+"/tcp")] = []nat.PortBinding{{HostPort: h, HostIP: ""}}
 		}
 	}
 
 	if cfg.VolumeMounts == nil {
-		for s, t := range *cfg.VolumeMounts {
+		for s, t := range cfg.VolumeMounts {
 			hConfig.Mounts = append(hConfig.Mounts, mount.Mount{Type: mount.TypeBind, Source: s, Target: t})
 		}
 	}

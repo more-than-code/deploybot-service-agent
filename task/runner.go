@@ -33,7 +33,7 @@ func (r *Runner) DoTask(conf interface{}, arguments []string) error {
 	}
 
 	if c.Files != nil {
-		for name, content := range *c.Files {
+		for name, content := range c.Files {
 			err = util.WriteToFile(name, content)
 			if err != nil {
 				return err

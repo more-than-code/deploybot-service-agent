@@ -30,7 +30,7 @@ func TestStartContainer(t *testing.T) {
 	h.StartContainer(&types.DeployConfig{
 		ImageName: "binartist/messaging",
 		ImageTag:  "latest",
-		Ports:     &map[string]string{"8002": "8002"},
+		Ports:     map[string]string{"8002": "8002"},
 		Env: []string{
 			"SERVER_PORT=:8002",
 			"SMS_TEMPLATE_CODE=SMS_181853823",
