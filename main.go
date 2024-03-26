@@ -6,6 +6,7 @@ import (
 
 	"deploybot-service-launcher/task"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/kelseyhightower/envconfig"
 )
@@ -24,6 +25,8 @@ func main() {
 	}
 
 	g := gin.Default()
+
+	g.Use(cors.Default())
 
 	t := task.NewScheduler()
 	g.POST("/streamWebhook", t.StreamWebhookHandler())
