@@ -8,8 +8,8 @@ import (
 
 	types "deploybot-service-launcher/deploybot-types"
 
-	dTypes "github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
@@ -18,8 +18,6 @@ import (
 )
 
 type ContainerHelperConfig struct {
-	DhUsername string `envconfig:"DH_USERNAME"`
-	DhPassword string `envconfig:"DH_PASSWORD"`
 	DockerHost string `envconfig:"DOCKER_HOST"`
 }
 
@@ -49,7 +47,7 @@ func (h *ContainerHelper) StartContainer(cfg *types.DeployConfig) {
 	h.cli.ContainerRemove(ctx, cfg.ServiceName, container.RemoveOptions{})
 
 	imageNameTag := cfg.ImageName + ":" + cfg.ImageTag
-	reader, err := h.cli.ImagePull(ctx, imageNameTag, dTypes.ImagePullOptions{})
+	reader, err := h.cli.ImagePull(ctx, imageNameTag, image.PullOptions{})
 	if err != nil {
 		log.Print(err)
 		return

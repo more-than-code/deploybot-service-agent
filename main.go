@@ -12,9 +12,9 @@ import (
 )
 
 type Config struct {
-	ServerPort string `envconfig:"SERVER_PORT"`
-	ServerCrt  string `envconfig:"SERVER_CRT"`
-	ServerKey  string `envconfig:"SERVER_KEY"`
+	ServicePort string `envconfig:"SERVICE_PORT"`
+	ServiceCrt  string `envconfig:"SERVICE_CRT"`
+	ServiceKey  string `envconfig:"SERVICE_KEY"`
 }
 
 func main() {
@@ -33,11 +33,11 @@ func main() {
 	g.GET("/healthCheck", t.HealthCheckHandler())
 
 	tlsConfig := &http.Server{
-		Addr:    cfg.ServerPort,
+		Addr:    cfg.ServicePort,
 		Handler: g,
 	}
 
-	err = tlsConfig.ListenAndServeTLS(cfg.ServerCrt, cfg.ServerKey)
+	err = tlsConfig.ListenAndServeTLS(cfg.ServiceCrt, cfg.ServiceKey)
 	if err != nil {
 		fmt.Println("Error starting server:", err)
 	}
