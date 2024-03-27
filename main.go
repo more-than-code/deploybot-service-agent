@@ -37,8 +37,11 @@ func main() {
 		Handler: g,
 	}
 
+	fmt.Println("SERVICE_CRT:", cfg.ServiceCrt)
+	fmt.Println("SERVICE_KEY:", cfg.ServiceKey)
+
 	err = tlsConfig.ListenAndServeTLS(cfg.ServiceCrt, cfg.ServiceKey)
 	if err != nil {
-		fmt.Println("Error starting server:", err)
+		fmt.Println("Error starting service:", err)
 	}
 }

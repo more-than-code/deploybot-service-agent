@@ -60,7 +60,7 @@ func (h *ContainerHelper) StartContainer(cfg *types.DeployConfig) {
 	}
 
 	if cfg.RestartPolicy.Name == "" {
-		cfg.RestartPolicy.Name = "always"
+		cfg.RestartPolicy.Name = "on-failure"
 	}
 
 	hConfig := &container.HostConfig{
