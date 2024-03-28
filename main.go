@@ -39,6 +39,7 @@ func main() {
 	g.DELETE("/images", a.DeleteImages())
 
 	g.GET("/network/:name", a.GetNetwork())
+	g.OPTIONS("/network", func(ctx *gin.Context) {})
 	g.DELETE("/network/:name", a.DeleteNetwork())
 	g.POST("/network", a.PostNetwork())
 
