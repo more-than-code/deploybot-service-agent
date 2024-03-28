@@ -48,9 +48,9 @@ func (s *Scheduler) GetDiskInfo() gin.HandlerFunc {
 	}
 }
 
-func (s *Scheduler) DeleteBuilderCache() gin.HandlerFunc {
+func (s *Scheduler) DeleteImages() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		err := s.cHelper.RemoveBuilderCache(ctx)
+		err := s.cHelper.RemoveImages(ctx)
 
 		if err != nil {
 			ctx.String(http.StatusInternalServerError, err.Error())

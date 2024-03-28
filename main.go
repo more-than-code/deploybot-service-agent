@@ -34,8 +34,9 @@ func main() {
 
 	g.GET("/serviceLogs", a.GetServiceLog())
 	g.GET("/diskInfo", a.GetDiskInfo())
-	g.OPTIONS("/builderCache", func(ctx *gin.Context) {})
-	g.DELETE("/builderCache", a.DeleteBuilderCache())
+
+	g.OPTIONS("/images", func(ctx *gin.Context) {})
+	g.DELETE("/images", a.DeleteImages())
 
 	g.GET("/network/:name", a.GetNetwork())
 	g.DELETE("/network/:name", a.DeleteNetwork())
