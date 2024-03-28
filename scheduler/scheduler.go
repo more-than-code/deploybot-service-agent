@@ -1,4 +1,4 @@
-package task
+package scheduler
 
 import (
 	"bytes"
@@ -11,6 +11,7 @@ import (
 	"time"
 
 	types "deploybot-service-launcher/deploybot-types"
+	"deploybot-service-launcher/util"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kelseyhightower/envconfig"
@@ -22,11 +23,12 @@ var gEventQueue = list.New()
 type SchedulerConfig struct {
 	ApiBaseUrl string `envconfig:"API_BASE_URL"`
 	ApiKey     string `envconfig:"API_KEY"`
+	DockerHost string `envconfig:"DOCKER_HOST"`
 }
 
 type Scheduler struct {
-	Runner *Runner
-	cfg    SchedulerConfig
+	cHelper *util.ContainerHelper
+	cfg     SchedulerConfig
 }
 
 func NewScheduler() *Scheduler {
@@ -36,7 +38,7 @@ func NewScheduler() *Scheduler {
 		panic(err)
 	}
 
-	return &Scheduler{Runner: NewRunner(), cfg: cfg}
+	return &Scheduler{cHelper: util.NewContainerHelper(cfg.DockerHost), cfg: cfg}
 }
 
 func (s *Scheduler) PushEvent(e types.Event) {
@@ -119,7 +121,7 @@ func (s *Scheduler) StreamWebhookHandler() gin.HandlerFunc {
 		ctx.JSON(http.StatusOK, types.WebhookResponse{})
 
 		go func() {
-			err := s.Runner.DoTask(task.Config, sw.Payload.Arguments)
+			err := s.DoTask(task.Config, sw.Payload.Arguments)
 
 			if timer != nil {
 				timer.Stop()
@@ -135,9 +137,90 @@ func (s *Scheduler) StreamWebhookHandler() gin.HandlerFunc {
 	}
 }
 
+func (s *Scheduler) DoTask(conf interface{}, arguments []string) error {
+
+	var c types.DeployConfig
+
+	bs, err := json.Marshal(conf)
+
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(bs, &c)
+
+	if err != nil {
+		return err
+	}
+
+	if c.Files != nil {
+		for name, content := range c.Files {
+			err = util.WriteToFile(name, content)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	go func() {
+		s.cHelper.StartContainer(&c)
+	}()
+
+	return nil
+}
+
 func (s *Scheduler) HealthCheckHandler() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 
+	}
+}
+
+func (s *Scheduler) PostNetwork() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var input CreateNetworkInput
+		err := ctx.BindJSON(&input)
+
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, CreateNetworkResponse{Msg: err.Error(), Code: types.CodeClientError})
+		}
+
+		name := input.Name
+
+		networkId, err := s.cHelper.CreateNetwork(ctx, name)
+
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, GetNetworkResponse{Msg: err.Error(), Code: types.CodeServerError})
+			return
+		}
+		ctx.JSON(http.StatusOK, GetNetworkResponse{Payload: &Network{Name: name, Id: networkId}})
+	}
+}
+
+func (s *Scheduler) GetNetwork() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		name := ctx.Param("name")
+
+		networkId, err := s.cHelper.GetNetworkId(ctx, name)
+
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, GetNetworkResponse{Msg: err.Error(), Code: types.CodeServerError})
+			return
+		}
+		ctx.JSON(http.StatusOK, GetNetworkResponse{Payload: &Network{Name: name, Id: networkId}})
+	}
+}
+
+func (s *Scheduler) DeleteNetwork() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		name := ctx.Param("name")
+
+		err := s.cHelper.RemoveNetwork(ctx, name)
+
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, DeleteNetworkResponse{Msg: err.Error(), Code: types.CodeServerError})
+			return
+		}
+		ctx.JSON(http.StatusOK, DeleteNetworkResponse{})
 	}
 }
 

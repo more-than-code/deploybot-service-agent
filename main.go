@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"deploybot-service-launcher/task"
+	"deploybot-service-launcher/scheduler"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -28,9 +28,13 @@ func main() {
 
 	g.Use(cors.Default())
 
-	t := task.NewScheduler()
+	t := scheduler.NewScheduler()
 	g.POST("/streamWebhook", t.StreamWebhookHandler())
 	g.GET("/healthCheck", t.HealthCheckHandler())
+
+	g.GET("/network/:name", t.GetNetwork())
+	g.DELETE("/network/:name", t.DeleteNetwork())
+	g.POST("/network", t.PostNetwork())
 
 	tlsConfig := &http.Server{
 		Addr:    cfg.ServicePort,

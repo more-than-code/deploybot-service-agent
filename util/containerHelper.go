@@ -8,17 +8,17 @@ import (
 
 	types "deploybot-service-launcher/deploybot-types"
 
+	dockerTypes "github.com/docker/docker/api/types"
+
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
-	"github.com/kelseyhightower/envconfig"
 )
 
 type ContainerHelperConfig struct {
-	DockerHost string `envconfig:"DOCKER_HOST"`
 }
 
 type ContainerHelper struct {
@@ -26,14 +26,10 @@ type ContainerHelper struct {
 	cfg ContainerHelperConfig
 }
 
-func NewContainerHelper() *ContainerHelper {
+func NewContainerHelper(dockerHost string) *ContainerHelper {
 	var cfg ContainerHelperConfig
-	err := envconfig.Process("", &cfg)
-	if err != nil {
-		panic(err)
-	}
 
-	cli, err := client.NewClientWithOpts(client.WithHost(cfg.DockerHost), client.WithAPIVersionNegotiation())
+	cli, err := client.NewClientWithOpts(client.WithHost(dockerHost), client.WithAPIVersionNegotiation())
 	if err != nil {
 		panic(err)
 	}
@@ -137,4 +133,27 @@ func (h *ContainerHelper) RemoveContainer(ctx context.Context, containerName str
 
 func (h *ContainerHelper) StopContainer(ctx context.Context, containerName string) error {
 	return h.cli.ContainerStop(ctx, containerName, container.StopOptions{})
+}
+
+func (h *ContainerHelper) CreateNetwork(ctx context.Context, networkName string) (string, error) {
+	res, err := h.cli.NetworkCreate(ctx, networkName, dockerTypes.NetworkCreate{Driver: "bridge"})
+
+	if err != nil {
+		return "", err
+	}
+
+	return res.ID, nil
+}
+
+func (h *ContainerHelper) GetNetworkId(ctx context.Context, networkName string) (string, error) {
+	res, err := h.cli.NetworkInspect(ctx, networkName, dockerTypes.NetworkInspectOptions{})
+	if err != nil {
+		return "", err
+	}
+
+	return res.ID, nil
+}
+
+func (h *ContainerHelper) RemoveNetwork(ctx context.Context, networkName string) error {
+	return h.cli.NetworkRemove(ctx, networkName)
 }
