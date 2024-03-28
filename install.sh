@@ -17,7 +17,7 @@ SERVICE_NAME="bot_agent"
 SERVICE_DESCRIPTION="Bot Agent Service"
 
 # Source the environment file
-source /home/admin/.bot_env
+source ~/.bot-config/env
 
 # Create the systemd service file
 cat << EOF > "/etc/systemd/system/$SERVICE_NAME.service"
