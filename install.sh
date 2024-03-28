@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Define the path to your program
-PROGRAM_PATH="/usr/local/bin/bot_launcher"
+PROGRAM_PATH="/usr/local/bin/bot_agent"
 
 # URL to download the file
-FILE_URL="https://github.com/more-than-code/deploybot-service-launcher/releases/download/v0.0.1/bot_launcher-linux-arm64"
+FILE_URL="https://github.com/more-than-code/deploybot-service-agent/releases/download/v0.0.1/bot_agent-linux-arm64"
 
 # Download the file
 wget -O "$PROGRAM_PATH" "$FILE_URL"
@@ -13,8 +13,8 @@ wget -O "$PROGRAM_PATH" "$FILE_URL"
 chmod +x "$PROGRAM_PATH"
 
 # Define the service name and description
-SERVICE_NAME="bot_launcher"
-SERVICE_DESCRIPTION="Bot Launcher Service"
+SERVICE_NAME="bot_agent"
+SERVICE_DESCRIPTION="Bot Agent Service"
 
 # Source the environment file
 source /home/admin/.bot_env
