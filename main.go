@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"deploybot-service-launcher/scheduler"
+	"deploybot-service-agent/api"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -28,13 +28,18 @@ func main() {
 
 	g.Use(cors.Default())
 
-	t := scheduler.NewScheduler()
-	g.POST("/streamWebhook", t.StreamWebhookHandler())
-	g.GET("/healthCheck", t.HealthCheckHandler())
+	a := api.NewScheduler()
+	g.POST("/streamWebhook", a.StreamWebhookHandler())
+	g.GET("/healthCheck", a.HealthCheckHandler())
 
-	g.GET("/network/:name", t.GetNetwork())
-	g.DELETE("/network/:name", t.DeleteNetwork())
-	g.POST("/network", t.PostNetwork())
+	g.GET("/serviceLogs", a.GetServiceLog())
+	g.GET("/diskInfo", a.GetDiskInfo())
+	g.OPTIONS("/builderCache", func(ctx *gin.Context) {})
+	g.DELETE("/builderCache", a.DeleteBuilderCache())
+
+	g.GET("/network/:name", a.GetNetwork())
+	g.DELETE("/network/:name", a.DeleteNetwork())
+	g.POST("/network", a.PostNetwork())
 
 	tlsConfig := &http.Server{
 		Addr:    cfg.ServicePort,

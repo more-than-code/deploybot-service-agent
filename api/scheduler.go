@@ -1,4 +1,4 @@
-package scheduler
+package api
 
 import (
 	"bytes"
@@ -10,8 +10,9 @@ import (
 	"net/http"
 	"time"
 
-	types "deploybot-service-launcher/deploybot-types"
-	"deploybot-service-launcher/util"
+	types "deploybot-service-agent/deploybot-types"
+	"deploybot-service-agent/model"
+	"deploybot-service-agent/util"
 
 	"github.com/gin-gonic/gin"
 	"github.com/kelseyhightower/envconfig"
@@ -139,7 +140,7 @@ func (s *Scheduler) StreamWebhookHandler() gin.HandlerFunc {
 
 func (s *Scheduler) DoTask(conf interface{}, arguments []string) error {
 
-	var c types.DeployConfig
+	var c model.DeployConfig
 
 	bs, err := json.Marshal(conf)
 
@@ -174,56 +175,6 @@ func (s *Scheduler) HealthCheckHandler() gin.HandlerFunc {
 
 	}
 }
-
-func (s *Scheduler) PostNetwork() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		var input CreateNetworkInput
-		err := ctx.BindJSON(&input)
-
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, CreateNetworkResponse{Msg: err.Error(), Code: types.CodeClientError})
-		}
-
-		name := input.Name
-
-		networkId, err := s.cHelper.CreateNetwork(ctx, name)
-
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, GetNetworkResponse{Msg: err.Error(), Code: types.CodeServerError})
-			return
-		}
-		ctx.JSON(http.StatusOK, GetNetworkResponse{Payload: &Network{Name: name, Id: networkId}})
-	}
-}
-
-func (s *Scheduler) GetNetwork() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		name := ctx.Param("name")
-
-		networkId, err := s.cHelper.GetNetworkId(ctx, name)
-
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, GetNetworkResponse{Msg: err.Error(), Code: types.CodeServerError})
-			return
-		}
-		ctx.JSON(http.StatusOK, GetNetworkResponse{Payload: &Network{Name: name, Id: networkId}})
-	}
-}
-
-func (s *Scheduler) DeleteNetwork() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		name := ctx.Param("name")
-
-		err := s.cHelper.RemoveNetwork(ctx, name)
-
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, DeleteNetworkResponse{Msg: err.Error(), Code: types.CodeServerError})
-			return
-		}
-		ctx.JSON(http.StatusOK, DeleteNetworkResponse{})
-	}
-}
-
 func (s *Scheduler) cleanUp(delay time.Duration, job func()) *time.Timer {
 	t := time.NewTimer(delay)
 	go func() {

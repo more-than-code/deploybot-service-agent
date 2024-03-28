@@ -6,10 +6,9 @@ import (
 	"log"
 	"os"
 
-	types "deploybot-service-launcher/deploybot-types"
+	"deploybot-service-agent/model"
 
-	dockerTypes "github.com/docker/docker/api/types"
-
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/mount"
@@ -36,7 +35,7 @@ func NewContainerHelper(dockerHost string) *ContainerHelper {
 	return &ContainerHelper{cli: cli, cfg: cfg}
 }
 
-func (h *ContainerHelper) StartContainer(cfg *types.DeployConfig) {
+func (h *ContainerHelper) StartContainer(cfg *model.DeployConfig) {
 	ctx := context.Background()
 
 	h.cli.ContainerStop(ctx, cfg.ServiceName, container.StopOptions{})
@@ -119,7 +118,7 @@ func (h *ContainerHelper) StartContainer(cfg *types.DeployConfig) {
 	// stdcopy.StdCopy(os.Stdout, os.Stderr, out)
 }
 
-func (h *ContainerHelper) RestartContainer(cfg *types.RestartConfig) error {
+func (h *ContainerHelper) RestartContainer(cfg *model.RestartConfig) error {
 	return h.cli.ContainerRestart(context.Background(), cfg.ServiceName, container.StopOptions{})
 }
 
@@ -136,7 +135,7 @@ func (h *ContainerHelper) StopContainer(ctx context.Context, containerName strin
 }
 
 func (h *ContainerHelper) CreateNetwork(ctx context.Context, networkName string) (string, error) {
-	res, err := h.cli.NetworkCreate(ctx, networkName, dockerTypes.NetworkCreate{Driver: "bridge"})
+	res, err := h.cli.NetworkCreate(ctx, networkName, types.NetworkCreate{Driver: "bridge"})
 
 	if err != nil {
 		return "", err
@@ -146,7 +145,7 @@ func (h *ContainerHelper) CreateNetwork(ctx context.Context, networkName string)
 }
 
 func (h *ContainerHelper) GetNetworkId(ctx context.Context, networkName string) (string, error) {
-	res, err := h.cli.NetworkInspect(ctx, networkName, dockerTypes.NetworkInspectOptions{})
+	res, err := h.cli.NetworkInspect(ctx, networkName, types.NetworkInspectOptions{})
 	if err != nil {
 		return "", err
 	}
@@ -156,4 +155,34 @@ func (h *ContainerHelper) GetNetworkId(ctx context.Context, networkName string) 
 
 func (h *ContainerHelper) RemoveNetwork(ctx context.Context, networkName string) error {
 	return h.cli.NetworkRemove(ctx, networkName)
+}
+
+func (h *ContainerHelper) RemoveImages(ctx context.Context) error {
+	images, err := h.cli.ImageList(ctx, image.ListOptions{})
+	if err != nil {
+		return err
+	}
+
+	for _, img := range images {
+		items, err := h.cli.ImageRemove(ctx, img.ID, image.RemoveOptions{Force: true, PruneChildren: true})
+
+		if err != nil {
+			return err
+		}
+
+		log.Println(items)
+	}
+
+	return nil
+}
+
+func (h *ContainerHelper) RemoveBuilderCache(ctx context.Context) error {
+	report, err := h.cli.BuildCachePrune(ctx, types.BuildCachePruneOptions{})
+	if err != nil {
+		return err
+	}
+
+	log.Println(report)
+
+	return nil
 }

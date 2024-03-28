@@ -1,41 +1,11 @@
 package util
 
 import (
+	"deploybot-service-agent/model"
+	"fmt"
 	"os"
-
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing/transport/http"
-	"github.com/kelseyhightower/envconfig"
+	"syscall"
 )
-
-type Config struct {
-	RepoUsername string `envconfig:"REPO_USERNAME"`
-	RepoPassword string `envconfig:"REPO_PASSWORD"`
-}
-
-func CloneRepo(path, cloneUrl string) error {
-	var cfg Config
-	err := envconfig.Process("", &cfg)
-	if err != nil {
-		panic(err)
-	}
-
-	_, err = git.PlainClone(path, false, &git.CloneOptions{
-		URL:               cloneUrl,
-		Progress:          os.Stdout,
-		RecurseSubmodules: 1,
-		Auth: &http.BasicAuth{
-			Username: cfg.RepoUsername,
-			Password: cfg.RepoPassword,
-		},
-	})
-
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
 
 func InterfaceOfSliceToMap(source []interface{}) map[string]interface{} {
 	m := map[string]interface{}{}
@@ -61,4 +31,18 @@ func WriteToFile(path string, content string) error {
 	}
 
 	return nil
+}
+
+func GetDiskInfo(mountPoint string) (*model.DiskInfo, error) {
+	var stat syscall.Statfs_t
+	err := syscall.Statfs(mountPoint, &stat)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "statfs failed: %v\n", err)
+		return nil, err
+	}
+
+	totalSize := stat.Blocks * uint64(stat.Bsize)
+	availableSpace := stat.Bavail * uint64(stat.Bsize)
+
+	return &model.DiskInfo{TotalSize: totalSize, AvailSize: availableSpace, Path: mountPoint}, nil
 }
