@@ -4,7 +4,7 @@
 PROGRAM_PATH="/usr/local/bin/bot_agent"
 
 # URL to download the file
-FILE_URL="https://github.com/more-than-code/deploybot-service-agent/releases/download/v0.0.1/bot_agent-linux-arm64"
+FILE_URL="https://github.com/more-than-code/deploybot-service-agent/releases/download/v0.0.1/bot_agent-linux-$(uname -m)"
 
 # Download the file
 wget -O "$PROGRAM_PATH" "$FILE_URL"
