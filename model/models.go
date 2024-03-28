@@ -30,8 +30,8 @@ type DeployConfig struct {
 }
 
 type Network struct {
-	Name string
-	Id   string
+	Name string `json:"name"`
+	Id   string `json:"id"`
 }
 
 type GetNetworkResponse struct {
