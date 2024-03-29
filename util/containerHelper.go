@@ -52,6 +52,7 @@ func (h *ContainerHelper) StartContainer(cfg *model.DeployConfig) {
 	cConfig := &container.Config{
 		Image: imageNameTag,
 		Env:   cfg.Env,
+		Cmd:   []string{cfg.Command},
 	}
 
 	if cfg.RestartPolicy.Name == "" {

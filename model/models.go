@@ -27,6 +27,7 @@ type DeployConfig struct {
 	Ports         map[string]string `json:"ports" bson:",omitempty"`
 	NetworkId     string            `json:"networkId" bson:",omitempty"`
 	NetworkName   string            `json:"networkName" bson:",omitempty"`
+	Command       string            `json:"command" bson:",omitempty"`
 	Links         []string          `json:"links" bson:",omitempty"`
 }
 
