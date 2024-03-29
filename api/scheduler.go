@@ -163,6 +163,15 @@ func (s *Scheduler) DoTask(conf interface{}, arguments []string) error {
 		}
 	}
 
+	if c.VolumeMounts != nil {
+		for srcDir := range c.VolumeMounts {
+			err = util.CreateDirsIfNotExist(srcDir)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	go func() {
 		s.cHelper.StartContainer(&c)
 	}()
