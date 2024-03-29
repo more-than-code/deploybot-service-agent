@@ -4,6 +4,7 @@ import (
 	"deploybot-service-agent/model"
 	"fmt"
 	"os"
+	"strings"
 	"syscall"
 )
 
@@ -19,6 +20,13 @@ func InterfaceOfSliceToMap(source []interface{}) map[string]interface{} {
 }
 
 func WriteToFile(path string, content string) error {
+	dir := path[:strings.LastIndex(path, "/")]
+	err := CreateDirsIfNotExist(dir)
+
+	if err != nil {
+		return err
+	}
+
 	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 		return err
@@ -30,6 +38,16 @@ func WriteToFile(path string, content string) error {
 		return err
 	}
 
+	return nil
+}
+
+func CreateDirsIfNotExist(dirPath string) error {
+	if _, err := os.Stat(dirPath); os.IsNotExist(err) {
+		err := os.MkdirAll(dirPath, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
