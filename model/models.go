@@ -42,6 +42,12 @@ type GetNetworkResponse struct {
 	Payload *Network `json:"payload"`
 }
 
+type GetNetworksResponse struct {
+	Code    int       `json:"code"`
+	Msg     string    `json:"msg"`
+	Payload []Network `json:"payload"`
+}
+
 type CreateNetworkResponse struct {
 	Code    int      `json:"code"`
 	Msg     string   `json:"msg"`

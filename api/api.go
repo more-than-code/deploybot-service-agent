@@ -96,6 +96,18 @@ func (s *Scheduler) GetNetwork() gin.HandlerFunc {
 	}
 }
 
+func (s *Scheduler) GetNetworks() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		networks, err := s.cHelper.GetNetworks(ctx)
+
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, model.GetNetworksResponse{Msg: err.Error(), Code: types.CodeServerError})
+			return
+		}
+		ctx.JSON(http.StatusOK, model.GetNetworksResponse{Payload: networks})
+	}
+}
+
 func (s *Scheduler) DeleteNetwork() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		name := ctx.Param("name")

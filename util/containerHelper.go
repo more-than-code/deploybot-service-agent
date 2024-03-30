@@ -158,6 +158,20 @@ func (h *ContainerHelper) GetNetworkId(ctx context.Context, networkName string) 
 	return res.ID, nil
 }
 
+func (h *ContainerHelper) GetNetworks(ctx context.Context) ([]model.Network, error) {
+	networks, err := h.cli.NetworkList(ctx, types.NetworkListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	var res []model.Network
+	for _, n := range networks {
+		res = append(res, model.Network{Name: n.Name, Id: n.ID})
+	}
+
+	return res, nil
+}
+
 func (h *ContainerHelper) RemoveNetwork(ctx context.Context, networkName string) error {
 	return h.cli.NetworkRemove(ctx, networkName)
 }
