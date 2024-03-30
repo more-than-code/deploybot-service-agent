@@ -1,9 +1,9 @@
 #!/bin/bash
 
-VERSION="latest"
+VERSION=$1
 
-if $1; then
-  VERSION=$1
+if [ -z "$VERSION" ]; then
+  VERSION="latest"
 fi  
 
 # Define the path to your program
