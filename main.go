@@ -15,20 +15,35 @@ import (
 var Version string // This will be set during build using -ldflags
 
 type Config struct {
-	ServicePort string `envconfig:"SERVICE_PORT"`
-	ServiceCrt  string `envconfig:"SERVICE_CRT"`
-	ServiceKey  string `envconfig:"SERVICE_KEY"`
+	ServicePort  string `envconfig:"SERVICE_PORT"`
+	ServiceCrt   string `envconfig:"SERVICE_CRT"`
+	ServiceKey   string `envconfig:"SERVICE_KEY"`
+	ApiBaseUrl   string `envconfig:"API_BASE_URL"`
+	ApiKey       string `envconfig:"API_KEY"`
+	DockerHost   string `envconfig:"DOCKER_HOST"`
+	DhUsername   string `envconfig:"DH_USERNAME"`
+	DhPassword   string `envconfig:"DH_PASSWORD"`
+	RepoUsername string `envconfig:"REPO_USERNAME"`
+	RepoPassword string `envconfig:"REPO_PASSWORD"`
 }
 
 func main() {
+	var cfg Config
+	err := envconfig.Process("", &cfg)
+	if err != nil {
+		panic(err)
+	}
+
 	if len(os.Args) > 1 {
 		arg1 := os.Args[1]
 
 		switch arg1 {
 		case "start":
-			initService()
+			initService(cfg)
 		case "version":
 			fmt.Println(Version)
+		case "env":
+
 		default:
 			fmt.Println("Uknown command line arguments", os.Args)
 		}
@@ -38,18 +53,20 @@ func main() {
 
 }
 
-func initService() {
-	var cfg Config
-	err := envconfig.Process("", &cfg)
-	if err != nil {
-		panic(err)
-	}
-
+func initService(cfg Config) {
 	g := gin.Default()
 
 	g.Use(cors.Default())
 
-	a := api.NewScheduler()
+	a := api.NewScheduler(api.SchedulerConfig{
+		ApiBaseUrl:   cfg.ApiBaseUrl,
+		ApiKey:       cfg.ApiKey,
+		DockerHost:   cfg.DockerHost,
+		DhUsername:   cfg.DhUsername,
+		DhPassword:   cfg.DhPassword,
+		RepoUsername: cfg.RepoUsername,
+		RepoPassword: cfg.RepoPassword,
+	})
 	g.POST("/streamWebhook", a.StreamWebhookHandler())
 	g.GET("/healthCheck", a.HealthCheckHandler())
 
@@ -73,7 +90,7 @@ func initService() {
 	fmt.Println("SERVICE_CRT:", cfg.ServiceCrt)
 	fmt.Println("SERVICE_KEY:", cfg.ServiceKey)
 
-	err = tlsConfig.ListenAndServeTLS(cfg.ServiceCrt, cfg.ServiceKey)
+	err := tlsConfig.ListenAndServeTLS(cfg.ServiceCrt, cfg.ServiceKey)
 	if err != nil {
 		fmt.Println("Error starting service:", err)
 	}

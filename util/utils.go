@@ -16,7 +16,6 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 
 	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/kelseyhightower/envconfig"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -119,26 +118,20 @@ func TarFiles(dir string) (io.Reader, error) {
 	return &buf, nil
 }
 
-type Config struct {
-	RepoUsername string `envconfig:"REPO_USERNAME"`
-	RepoPassword string `envconfig:"REPO_PASSWORD"`
+type GitCredentials struct {
+	Username string
+	Password string
 }
 
-func CloneRepo(path, cloneUrl, branch string) error {
-	var cfg Config
-	err := envconfig.Process("", &cfg)
-	if err != nil {
-		panic(err)
-	}
-
-	_, err = git.PlainClone(path, false, &git.CloneOptions{
+func CloneRepo(path, cloneUrl, branch string, cred GitCredentials) error {
+	_, err := git.PlainClone(path, false, &git.CloneOptions{
 		URL:               cloneUrl,
 		ReferenceName:     plumbing.NewBranchReferenceName(branch),
 		Progress:          os.Stdout,
 		RecurseSubmodules: 1,
 		Auth: &http.BasicAuth{
-			Username: cfg.RepoUsername,
-			Password: cfg.RepoPassword,
+			Username: cred.Username,
+			Password: cred.Password,
 		},
 	})
 

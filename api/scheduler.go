@@ -19,18 +19,19 @@ import (
 	"deploybot-service-agent/util"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kelseyhightower/envconfig"
 )
 
 var gTicker *time.Ticker
 var gEventQueue = list.New()
 
 type SchedulerConfig struct {
-	ApiBaseUrl string `envconfig:"API_BASE_URL"`
-	ApiKey     string `envconfig:"API_KEY"`
-	DockerHost string `envconfig:"DOCKER_HOST"`
-	DhUsername string `envconfig:"DH_USERNAME"`
-	DhPassword string `envconfig:"DH_PASSWORD"`
+	ApiBaseUrl   string
+	ApiKey       string
+	DockerHost   string
+	DhUsername   string
+	DhPassword   string
+	RepoUsername string
+	RepoPassword string
 }
 
 type Scheduler struct {
@@ -38,13 +39,7 @@ type Scheduler struct {
 	cfg     SchedulerConfig
 }
 
-func NewScheduler() *Scheduler {
-	var cfg SchedulerConfig
-	err := envconfig.Process("", &cfg)
-	if err != nil {
-		panic(err)
-	}
-
+func NewScheduler(cfg SchedulerConfig) *Scheduler {
 	return &Scheduler{cHelper: util.NewContainerHelper(cfg.DockerHost, util.DhCredentials{Username: cfg.DhUsername, Password: cfg.DhPassword}), cfg: cfg}
 }
 
@@ -212,7 +207,7 @@ func (s *Scheduler) DoBuildTask(conf interface{}, arguments []string) error {
 	path := "/var/temp/" + c.RepoName + "_" + c.RepoBranch + "/"
 
 	os.RemoveAll(path)
-	err = util.CloneRepo(path, c.RepoUrl, c.RepoBranch)
+	err = util.CloneRepo(path, c.RepoUrl, c.RepoBranch, util.GitCredentials{Username: s.cfg.RepoUsername, Password: s.cfg.RepoPassword})
 
 	if err != nil {
 		return err
