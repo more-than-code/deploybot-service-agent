@@ -43,6 +43,10 @@ Environment="SERVICE_KEY=$SERVICE_KEY"
 Environment="API_KEY=$API_KEY"
 Environment="API_BASE_URL=$API_BASE_URL"
 Environment="DOCKER_HOST=$DOCKER_HOST"
+Environment="DH_USERNAME=$DH_USERNAME"
+Environment="DH_PASSWORD=$DH_PASSWORD"
+Environment="REPO_USERNAME=$REPO_USERNAME"
+Environment="REPO_PASSWORD=$REPO_PASSWORD"
 
 [Install]
 WantedBy=multi-user.target
