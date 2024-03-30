@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"deploybot-service-agent/api"
 
@@ -11,6 +12,8 @@ import (
 	"github.com/kelseyhightower/envconfig"
 )
 
+var Version string // This will be set during build using -ldflags
+
 type Config struct {
 	ServicePort string `envconfig:"SERVICE_PORT"`
 	ServiceCrt  string `envconfig:"SERVICE_CRT"`
@@ -18,6 +21,24 @@ type Config struct {
 }
 
 func main() {
+	if len(os.Args) > 1 {
+		arg1 := os.Args[1]
+
+		switch arg1 {
+		case "start":
+			initService()
+		case "version":
+			fmt.Println(Version)
+		default:
+			fmt.Println("Invalid command line argument")
+		}
+	} else {
+		fmt.Println("Please provide a command line argument")
+	}
+
+}
+
+func initService() {
 	var cfg Config
 	err := envconfig.Process("", &cfg)
 	if err != nil {

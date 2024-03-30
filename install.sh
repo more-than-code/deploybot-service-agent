@@ -1,10 +1,16 @@
 #!/bin/bash
 
+VERSION="latest"
+
+if $1; then
+  VERSION=$1
+fi  
+
 # Define the path to your program
 PROGRAM_PATH="/usr/local/bin/bot_agent"
 
 # URL to download the file
-FILE_URL="https://github.com/more-than-code/deploybot-service-agent/releases/download/v0.0.1/bot_agent-linux-$(uname -m)"
+FILE_URL="https://github.com/more-than-code/deploybot-service-agent/releases/download/$VERSION/bot_agent-linux-$(uname -m)"
 
 # Download the file
 wget -O "$PROGRAM_PATH" "$FILE_URL"
@@ -14,7 +20,7 @@ chmod +x "$PROGRAM_PATH"
 
 # Define the service name and description
 SERVICE_NAME="bot_agent"
-SERVICE_DESCRIPTION="Bot Agent Service"
+SERVICE_DESCRIPTION="Bot Agent @$VERSION"
 
 # Source the environment file
 source ~/.bot-config/env
@@ -37,7 +43,6 @@ Environment="SERVICE_KEY=$SERVICE_KEY"
 Environment="API_KEY=$API_KEY"
 Environment="API_BASE_URL=$API_BASE_URL"
 Environment="DOCKER_HOST=$DOCKER_HOST"
-
 
 [Install]
 WantedBy=multi-user.target
