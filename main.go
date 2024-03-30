@@ -56,7 +56,14 @@ func main() {
 func initService(cfg Config) {
 	g := gin.Default()
 
-	g.Use(cors.Default())
+	g.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"GET", "POST", "DELETE"},
+		AllowHeaders:     []string{"Origin", "Content-Type"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * 60 * 60, // Maximum cache age (12 hours)
+	}))
 
 	a := api.NewScheduler(api.SchedulerConfig{
 		ApiBaseUrl:   cfg.ApiBaseUrl,
@@ -67,22 +74,30 @@ func initService(cfg Config) {
 		RepoUsername: cfg.RepoUsername,
 		RepoPassword: cfg.RepoPassword,
 	})
+
+	// Define API routes
 	g.POST("/streamWebhook", a.StreamWebhookHandler())
 	g.GET("/healthCheck", a.HealthCheckHandler())
-
 	g.GET("/serviceLogs", a.GetServiceLog())
 	g.GET("/diskInfo", a.GetDiskInfo())
-
-	g.OPTIONS("/images", func(ctx *gin.Context) {})
 	g.DELETE("/images", a.DeleteImages())
-	g.OPTIONS("/bulderCache", func(ctx *gin.Context) {})
 	g.DELETE("/bulderCache", a.DeleteBuilderCache())
-
 	g.GET("/network/:name", a.GetNetwork())
 	g.GET("/networks", a.GetNetworks())
-	g.OPTIONS("/network", func(ctx *gin.Context) {})
 	g.DELETE("/network/:name", a.DeleteNetwork())
 	g.POST("/network", a.PostNetwork())
+
+	// OPTIONS routes for CORS preflight requests
+	g.OPTIONS("/streamWebhook", func(c *gin.Context) { c.Status(http.StatusOK) })
+	g.OPTIONS("/healthCheck", func(c *gin.Context) { c.Status(http.StatusOK) })
+	g.OPTIONS("/serviceLogs", func(c *gin.Context) { c.Status(http.StatusOK) })
+	g.OPTIONS("/diskInfo", func(c *gin.Context) { c.Status(http.StatusOK) })
+	g.OPTIONS("/images", func(c *gin.Context) { c.Status(http.StatusOK) })
+	g.OPTIONS("/bulderCache", func(c *gin.Context) { c.Status(http.StatusOK) })
+	g.OPTIONS("/network/:name", func(c *gin.Context) { c.Status(http.StatusOK) })
+	g.OPTIONS("/networks", func(c *gin.Context) { c.Status(http.StatusOK) })
+	g.OPTIONS("/network/:name", func(c *gin.Context) { c.Status(http.StatusOK) })
+	g.OPTIONS("/network", func(c *gin.Context) { c.Status(http.StatusOK) })
 
 	tlsConfig := &http.Server{
 		Addr:    cfg.ServicePort,
