@@ -2,6 +2,8 @@ package util
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
 	"io"
 	"log"
 	"os"
@@ -13,11 +15,14 @@ import (
 	"github.com/docker/docker/api/types/image"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/api/types/network"
+	"github.com/docker/docker/api/types/registry"
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 )
 
 type ContainerHelperConfig struct {
+	DhUsername string
+	DhPassword string
 }
 
 type ContainerHelper struct {
@@ -203,5 +208,38 @@ func (h *ContainerHelper) RemoveBuilderCache(ctx context.Context) error {
 
 	log.Println(report)
 
+	return nil
+}
+
+func (h *ContainerHelper) BuildImage(buildContext io.Reader, buidOptions *types.ImageBuildOptions) error {
+	buildResponse, err := h.cli.ImageBuild(context.Background(), buildContext, *buidOptions)
+
+	if err != nil {
+		return err
+	}
+
+	defer buildResponse.Body.Close()
+
+	io.Copy(os.Stdout, buildResponse.Body)
+
+	return nil
+}
+
+func (h *ContainerHelper) PushImage(name string) error {
+	authConfig := registry.AuthConfig{
+		Username: h.cfg.DhUsername,
+		Password: h.cfg.DhPassword,
+	}
+	encodedJSON, _ := json.Marshal(authConfig)
+	authStr := base64.URLEncoding.EncodeToString(encodedJSON)
+
+	res, err := h.cli.ImagePush(context.Background(), name, types.ImagePushOptions{RegistryAuth: authStr})
+
+	if err != nil {
+		return err
+	}
+
+	defer res.Close()
+	io.Copy(os.Stdout, res)
 	return nil
 }

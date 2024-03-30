@@ -8,9 +8,13 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	types "deploybot-service-agent/deploybot-types"
+
+	dTypes "github.com/docker/docker/api/types"
+
 	"deploybot-service-agent/model"
 	"deploybot-service-agent/util"
 
@@ -25,6 +29,8 @@ type SchedulerConfig struct {
 	ApiBaseUrl string `envconfig:"API_BASE_URL"`
 	ApiKey     string `envconfig:"API_KEY"`
 	DockerHost string `envconfig:"DOCKER_HOST"`
+	DhUsername string `envconfig:"DH_USERNAME"`
+	DhPassword string `envconfig:"DH_PASSWORD"`
 }
 
 type Scheduler struct {
@@ -122,7 +128,12 @@ func (s *Scheduler) StreamWebhookHandler() gin.HandlerFunc {
 		ctx.JSON(http.StatusOK, types.WebhookResponse{})
 
 		go func() {
-			err := s.DoTask(task.Config, sw.Payload.Arguments)
+			var err error
+			if task.Type == types.BuildTask {
+				err = s.DoBuildTask(task.Config, sw.Payload.Arguments)
+			} else if task.Type == types.DeployTask {
+				err = s.DoDeployTask(task.Config, sw.Payload.Arguments)
+			}
 
 			if timer != nil {
 				timer.Stop()
@@ -138,8 +149,7 @@ func (s *Scheduler) StreamWebhookHandler() gin.HandlerFunc {
 	}
 }
 
-func (s *Scheduler) DoTask(conf interface{}, arguments []string) error {
-
+func (s *Scheduler) DoDeployTask(conf interface{}, arguments []string) error {
 	var c model.DeployConfig
 
 	bs, err := json.Marshal(conf)
@@ -175,6 +185,54 @@ func (s *Scheduler) DoTask(conf interface{}, arguments []string) error {
 	go func() {
 		s.cHelper.StartContainer(&c)
 	}()
+
+	return nil
+}
+
+func (s *Scheduler) DoBuildTask(conf interface{}, arguments []string) error {
+	var c model.BuildConfig
+
+	bs, err := json.Marshal(conf)
+
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(bs, &c)
+
+	if err != nil {
+		return err
+	}
+
+	if c.RepoBranch == "" {
+		c.RepoBranch = "main"
+	}
+
+	// !!! Never omit the trailing slash, otherwise util.TarFiles will fail
+	path := "/var/temp/" + c.RepoName + "_" + c.RepoBranch + "/"
+
+	os.RemoveAll(path)
+	err = util.CloneRepo(path, c.RepoUrl, c.RepoBranch)
+
+	if err != nil {
+		return err
+	}
+
+	files, err := util.TarFiles(path)
+
+	if err != nil {
+		return err
+	}
+
+	imageNameTag := c.ImageName + ":" + c.ImageTag
+
+	err = s.cHelper.BuildImage(files, &dTypes.ImageBuildOptions{Dockerfile: c.Dockerfile, Tags: []string{imageNameTag}, BuildArgs: c.Args, Version: dTypes.BuilderBuildKit})
+
+	if err != nil {
+		return err
+	}
+
+	s.cHelper.PushImage(imageNameTag)
 
 	return nil
 }

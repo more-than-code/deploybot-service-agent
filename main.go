@@ -32,7 +32,7 @@ func main() {
 		case "version":
 			fmt.Println(Version)
 		default:
-			fmt.Println("Invalid command line argument")
+			fmt.Println("Uknown command line arguments", os.Args)
 		}
 	} else {
 		fmt.Println("Please provide a command line argument")
