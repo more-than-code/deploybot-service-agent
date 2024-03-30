@@ -7,7 +7,7 @@ if [ -z "$VERSION" ]; then
 fi  
 
 # Define the path to your program
-PROGRAM_PATH="/usr/local/bin/bot_agent"
+PROGRAM_PATH="/usr/local/bin/bot_agent start"
 
 # URL to download the file
 FILE_URL="https://github.com/more-than-code/deploybot-service-agent/releases/download/$VERSION/bot_agent-linux-$(uname -m)"
@@ -20,7 +20,7 @@ chmod +x "$PROGRAM_PATH"
 
 # Define the service name and description
 SERVICE_NAME="bot_agent"
-SERVICE_DESCRIPTION="Bot Agent @$VERSION"
+SERVICE_DESCRIPTION="BotAgent@$VERSION"
 
 # Source the environment file
 source ~/.bot-config/env
