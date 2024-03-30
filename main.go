@@ -94,10 +94,9 @@ func initService(cfg Config) {
 	g.OPTIONS("/diskInfo", func(c *gin.Context) { c.Status(http.StatusOK) })
 	g.OPTIONS("/images", func(c *gin.Context) { c.Status(http.StatusOK) })
 	g.OPTIONS("/bulderCache", func(c *gin.Context) { c.Status(http.StatusOK) })
-	g.OPTIONS("/network/:name", func(c *gin.Context) { c.Status(http.StatusOK) })
 	g.OPTIONS("/networks", func(c *gin.Context) { c.Status(http.StatusOK) })
-	g.OPTIONS("/network/:name", func(c *gin.Context) { c.Status(http.StatusOK) })
 	g.OPTIONS("/network", func(c *gin.Context) { c.Status(http.StatusOK) })
+	g.OPTIONS("/network/:name", func(c *gin.Context) { c.Status(http.StatusOK) })
 
 	tlsConfig := &http.Server{
 		Addr:    cfg.ServicePort,
