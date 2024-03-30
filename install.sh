@@ -33,7 +33,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=$PROGRAM_PATH --arg1=start
+ExecStart=$PROGRAM_PATH start
 Restart=on-failure
 RestartSec=30s
 StartLimitBurst=10
