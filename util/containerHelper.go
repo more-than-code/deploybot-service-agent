@@ -20,24 +20,22 @@ import (
 	"github.com/docker/go-connections/nat"
 )
 
-type ContainerHelperConfig struct {
-	DhUsername string
-	DhPassword string
+type DhCredentials struct {
+	Username string
+	Password string
 }
 
 type ContainerHelper struct {
-	cli *client.Client
-	cfg ContainerHelperConfig
+	cli  *client.Client
+	cred DhCredentials
 }
 
-func NewContainerHelper(dockerHost string) *ContainerHelper {
-	var cfg ContainerHelperConfig
-
+func NewContainerHelper(dockerHost string, cred DhCredentials) *ContainerHelper {
 	cli, err := client.NewClientWithOpts(client.WithHost(dockerHost), client.WithAPIVersionNegotiation())
 	if err != nil {
 		panic(err)
 	}
-	return &ContainerHelper{cli: cli, cfg: cfg}
+	return &ContainerHelper{cli, cred}
 }
 
 func (h *ContainerHelper) StartContainer(cfg *model.DeployConfig) {
@@ -227,13 +225,13 @@ func (h *ContainerHelper) BuildImage(buildContext io.Reader, buidOptions *types.
 
 func (h *ContainerHelper) PushImage(name string) error {
 	authConfig := registry.AuthConfig{
-		Username: h.cfg.DhUsername,
-		Password: h.cfg.DhPassword,
+		Username: h.cred.Username,
+		Password: h.cred.Password,
 	}
 	encodedJSON, _ := json.Marshal(authConfig)
 	authStr := base64.URLEncoding.EncodeToString(encodedJSON)
 
-	res, err := h.cli.ImagePush(context.Background(), name, types.ImagePushOptions{RegistryAuth: authStr})
+	res, err := h.cli.ImagePush(context.Background(), name, image.PushOptions{RegistryAuth: authStr})
 
 	if err != nil {
 		return err

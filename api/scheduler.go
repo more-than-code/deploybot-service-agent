@@ -45,7 +45,7 @@ func NewScheduler() *Scheduler {
 		panic(err)
 	}
 
-	return &Scheduler{cHelper: util.NewContainerHelper(cfg.DockerHost), cfg: cfg}
+	return &Scheduler{cHelper: util.NewContainerHelper(cfg.DockerHost, util.DhCredentials{Username: cfg.DhUsername, Password: cfg.DhPassword}), cfg: cfg}
 }
 
 func (s *Scheduler) PushEvent(e types.Event) {
@@ -237,11 +237,6 @@ func (s *Scheduler) DoBuildTask(conf interface{}, arguments []string) error {
 	return nil
 }
 
-func (s *Scheduler) HealthCheckHandler() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-
-	}
-}
 func (s *Scheduler) cleanUp(delay time.Duration, job func()) *time.Timer {
 	t := time.NewTimer(delay)
 	go func() {

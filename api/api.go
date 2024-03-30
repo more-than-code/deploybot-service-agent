@@ -121,3 +121,9 @@ func (s *Scheduler) DeleteNetwork() gin.HandlerFunc {
 		ctx.JSON(http.StatusOK, model.DeleteNetworkResponse{})
 	}
 }
+
+func (s *Scheduler) HealthCheckHandler() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+
+	}
+}
