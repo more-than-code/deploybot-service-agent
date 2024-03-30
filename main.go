@@ -43,9 +43,9 @@ func main() {
 		case "version":
 			fmt.Println(Version)
 		case "env":
-
+			fmt.Printf("%+v\n", cfg)
 		default:
-			fmt.Println("Uknown command line arguments", os.Args)
+			fmt.Sprintln("Uknown command line arguments", os.Args)
 		}
 	} else {
 		fmt.Println("Please provide a command line argument")
@@ -75,6 +75,8 @@ func initService(cfg Config) {
 
 	g.OPTIONS("/images", func(ctx *gin.Context) {})
 	g.DELETE("/images", a.DeleteImages())
+	g.OPTIONS("/bulderCache", func(ctx *gin.Context) {})
+	g.DELETE("/bulderCache", a.DeleteBuilderCache())
 
 	g.GET("/network/:name", a.GetNetwork())
 	g.GET("/networks", a.GetNetworks())
@@ -86,9 +88,6 @@ func initService(cfg Config) {
 		Addr:    cfg.ServicePort,
 		Handler: g,
 	}
-
-	fmt.Println("SERVICE_CRT:", cfg.ServiceCrt)
-	fmt.Println("SERVICE_KEY:", cfg.ServiceKey)
 
 	err := tlsConfig.ListenAndServeTLS(cfg.ServiceCrt, cfg.ServiceKey)
 	if err != nil {

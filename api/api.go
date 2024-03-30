@@ -61,6 +61,19 @@ func (s *Scheduler) DeleteImages() gin.HandlerFunc {
 	}
 }
 
+func (s *Scheduler) DeleteBuilderCache() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		err := s.cHelper.RemoveBuilderCache(ctx)
+
+		if err != nil {
+			ctx.String(http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		ctx.String(http.StatusOK, "OK")
+	}
+}
+
 func (s *Scheduler) PostNetwork() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var input model.CreateNetworkInput
