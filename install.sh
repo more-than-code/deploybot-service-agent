@@ -7,7 +7,7 @@ if [ -z "$VERSION" ]; then
 fi  
 
 # Define the path to your program
-PROGRAM_PATH="/usr/local/bin/bot_agent start"
+PROGRAM_PATH="/usr/local/bin/bot_agent"
 
 # URL to download the file
 FILE_URL="https://github.com/more-than-code/deploybot-service-agent/releases/download/$VERSION/bot_agent-linux-$(uname -m)"
@@ -33,7 +33,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=$PROGRAM_PATH
+ExecStart=$PROGRAM_PATH --arg1=start
 Restart=on-failure
 RestartSec=30s
 StartLimitBurst=10
