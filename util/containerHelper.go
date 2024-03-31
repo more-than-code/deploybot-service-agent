@@ -126,8 +126,8 @@ func (h *ContainerHelper) StartContainer(cfg *model.DeployConfig) {
 	// stdcopy.StdCopy(os.Stdout, os.Stderr, out)
 }
 
-func (h *ContainerHelper) RestartContainer(cfg *model.RestartConfig) error {
-	return h.cli.ContainerRestart(context.Background(), cfg.ServiceName, container.StopOptions{})
+func (h *ContainerHelper) RestartContainer(ctx context.Context, containerName string) error {
+	return h.cli.ContainerRestart(ctx, containerName, container.StopOptions{})
 }
 
 func (h *ContainerHelper) LogContainer(ctx context.Context, containerName string) (io.ReadCloser, error) {
@@ -140,6 +140,24 @@ func (h *ContainerHelper) RemoveContainer(ctx context.Context, containerName str
 
 func (h *ContainerHelper) StopContainer(ctx context.Context, containerName string) error {
 	return h.cli.ContainerStop(ctx, containerName, container.StopOptions{})
+}
+
+func (h *ContainerHelper) GetContainer(ctx context.Context, containerName string) (interface{}, error) {
+	return h.cli.ContainerInspect(ctx, containerName)
+}
+
+func (h *ContainerHelper) GetContainers(ctx context.Context) ([]interface{}, error) {
+	containers, err := h.cli.ContainerList(ctx, container.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	var res []interface{}
+	for _, c := range containers {
+		res = append(res, c)
+	}
+
+	return res, nil
 }
 
 func (h *ContainerHelper) CreateNetwork(ctx context.Context, networkName string) (string, error) {

@@ -74,13 +74,13 @@ func (s *Scheduler) DeleteBuilderCache() gin.HandlerFunc {
 	}
 }
 
-func (s *Scheduler) PostNetwork() gin.HandlerFunc {
+func (s *Scheduler) CreateNetwork() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var input model.CreateNetworkInput
 		err := ctx.BindJSON(&input)
 
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, model.CreateNetworkResponse{Msg: err.Error(), Code: types.CodeClientError})
+			ctx.JSON(http.StatusInternalServerError, model.CreateNetworkResponse{Msg: err.Error(), Code: types.CodeServerError})
 		}
 
 		name := input.Name
@@ -88,7 +88,7 @@ func (s *Scheduler) PostNetwork() gin.HandlerFunc {
 		networkId, err := s.cHelper.CreateNetwork(ctx, name)
 
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, model.GetNetworkResponse{Msg: err.Error(), Code: types.CodeServerError})
+			ctx.JSON(http.StatusInternalServerError, model.GetNetworkResponse{Msg: err.Error(), Code: types.CodeServerError})
 			return
 		}
 		ctx.JSON(http.StatusOK, model.GetNetworkResponse{Payload: &model.Network{Name: name, Id: networkId}})
@@ -102,7 +102,7 @@ func (s *Scheduler) GetNetwork() gin.HandlerFunc {
 		networkId, err := s.cHelper.GetNetworkId(ctx, name)
 
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, model.GetNetworkResponse{Msg: err.Error(), Code: types.CodeServerError})
+			ctx.JSON(http.StatusInternalServerError, model.GetNetworkResponse{Msg: err.Error(), Code: types.CodeServerError})
 			return
 		}
 		ctx.JSON(http.StatusOK, model.GetNetworkResponse{Payload: &model.Network{Name: name, Id: networkId}})
@@ -114,7 +114,7 @@ func (s *Scheduler) GetNetworks() gin.HandlerFunc {
 		networks, err := s.cHelper.GetNetworks(ctx)
 
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, model.GetNetworksResponse{Msg: err.Error(), Code: types.CodeServerError})
+			ctx.JSON(http.StatusInternalServerError, model.GetNetworksResponse{Msg: err.Error(), Code: types.CodeServerError})
 			return
 		}
 		ctx.JSON(http.StatusOK, model.GetNetworksResponse{Payload: networks})
@@ -128,11 +128,76 @@ func (s *Scheduler) DeleteNetwork() gin.HandlerFunc {
 		err := s.cHelper.RemoveNetwork(ctx, name)
 
 		if err != nil {
-			ctx.JSON(http.StatusBadRequest, model.DeleteNetworkResponse{Msg: err.Error(), Code: types.CodeServerError})
+			ctx.JSON(http.StatusInternalServerError, model.DeleteNetworkResponse{Msg: err.Error(), Code: types.CodeServerError})
 			return
 		}
 		ctx.JSON(http.StatusOK, model.DeleteNetworkResponse{})
 	}
+}
+
+func (s *Scheduler) UpdateService() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var input model.UpdateServiceInput
+		err := ctx.BindJSON(&input)
+
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, model.ApiResponse{Msg: err.Error(), Code: types.CodeServerError})
+		}
+
+		if input.Restarting {
+			err = s.cHelper.RestartContainer(ctx, input.Name)
+		} else if !input.Running {
+			err = s.cHelper.StopContainer(ctx, input.Name)
+		}
+
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, model.ApiResponse{Msg: err.Error(), Code: types.CodeServerError})
+			return
+		}
+
+		ctx.JSON(http.StatusOK, model.ApiResponse{})
+	}
+}
+
+func (s *Scheduler) DeleteService() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		name := ctx.Query("name")
+
+		err := s.cHelper.RemoveContainer(ctx, name)
+
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, model.ApiResponse{Msg: err.Error(), Code: types.CodeServerError})
+			return
+		}
+		ctx.JSON(http.StatusOK, model.ApiResponse{})
+	}
+}
+
+func (s *Scheduler) GetService() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		name := ctx.Query("name")
+
+		res, err := s.cHelper.GetContainer(ctx, name)
+
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, model.ApiResponse{Msg: err.Error(), Code: types.CodeServerError})
+			return
+		}
+		ctx.JSON(http.StatusOK, model.ApiResponse{Payload: res})
+	}
+}
+
+func (s *Scheduler) GetServices() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		res, err := s.cHelper.GetContainers(ctx)
+
+		if err != nil {
+			ctx.JSON(http.StatusBadRequest, model.ApiResponse{Msg: err.Error(), Code: types.CodeServerError})
+			return
+		}
+		ctx.JSON(http.StatusOK, model.ApiResponse{Payload: res})
+	}
+
 }
 
 func (s *Scheduler) HealthCheckHandler() gin.HandlerFunc {

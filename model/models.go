@@ -78,3 +78,15 @@ type DiskInfo struct {
 type RestartConfig struct {
 	ServiceName string `json:"serviceName"`
 }
+
+type ApiResponse struct {
+	Code    int         `json:"code"`
+	Msg     string      `json:"msg"`
+	Payload interface{} `json:"payload"`
+}
+
+type UpdateServiceInput struct {
+	Name       string `json:"name"`
+	Running    bool   `json:"running"`
+	Restarting bool   `json:"restarting"`
+}

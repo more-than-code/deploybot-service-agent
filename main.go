@@ -58,8 +58,8 @@ func initService(cfg Config) {
 
 	g.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"*"},
-		AllowMethods:     []string{"GET", "POST", "DELETE"},
-		AllowHeaders:     []string{"Origin", "Content-Type"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 		MaxAge:           12 * 60 * 60, // Maximum cache age (12 hours)
@@ -85,7 +85,11 @@ func initService(cfg Config) {
 	g.GET("/network/:name", a.GetNetwork())
 	g.GET("/networks", a.GetNetworks())
 	g.DELETE("/network/:name", a.DeleteNetwork())
-	g.POST("/network", a.PostNetwork())
+	g.POST("/network", a.CreateNetwork())
+	g.GET("/service/:name", a.GetService())
+	g.GET("/services", a.GetServices())
+	g.DELETE("/service/:name", a.DeleteService())
+	g.PUT("/service", a.UpdateService())
 
 	// OPTIONS routes for CORS preflight requests
 	g.OPTIONS("/streamWebhook", func(c *gin.Context) { c.Status(http.StatusOK) })
@@ -97,6 +101,9 @@ func initService(cfg Config) {
 	g.OPTIONS("/networks", func(c *gin.Context) { c.Status(http.StatusOK) })
 	g.OPTIONS("/network", func(c *gin.Context) { c.Status(http.StatusOK) })
 	g.OPTIONS("/network/:name", func(c *gin.Context) { c.Status(http.StatusOK) })
+	g.OPTIONS("/service/:name", func(c *gin.Context) { c.Status(http.StatusOK) })
+	g.OPTIONS("/services", func(c *gin.Context) { c.Status(http.StatusOK) })
+	g.OPTIONS("/service", func(c *gin.Context) { c.Status(http.StatusOK) })
 
 	tlsConfig := &http.Server{
 		Addr:    cfg.ServicePort,
