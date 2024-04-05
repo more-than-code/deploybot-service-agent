@@ -221,7 +221,7 @@ func (s *Scheduler) DoBuildTask(conf interface{}, arguments []string) error {
 
 	imageNameTag := c.ImageName + ":" + c.ImageTag
 
-	err = s.cHelper.BuildImage(files, &dTypes.ImageBuildOptions{Dockerfile: c.Dockerfile, Tags: []string{imageNameTag}, BuildArgs: c.Args, Version: dTypes.BuilderBuildKit})
+	err = s.cHelper.BuildImage(files, &dTypes.ImageBuildOptions{PullParent: true, Dockerfile: c.Dockerfile, Tags: []string{imageNameTag}, BuildArgs: c.Args, Version: dTypes.BuilderBuildKit})
 
 	if err != nil {
 		return err

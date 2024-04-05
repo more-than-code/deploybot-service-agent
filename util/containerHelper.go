@@ -142,8 +142,8 @@ func (h *ContainerHelper) StopContainer(ctx context.Context, containerName strin
 	return h.cli.ContainerStop(ctx, containerName, container.StopOptions{})
 }
 
-func (h *ContainerHelper) GetContainer(ctx context.Context, containerName string) (interface{}, error) {
-	return h.cli.ContainerInspect(ctx, containerName)
+func (h *ContainerHelper) GetContainer(ctx context.Context, containerId string) (interface{}, error) {
+	return h.cli.ContainerInspect(ctx, containerId)
 }
 
 func (h *ContainerHelper) GetContainers(ctx context.Context) ([]interface{}, error) {
