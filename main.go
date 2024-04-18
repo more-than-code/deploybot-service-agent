@@ -110,7 +110,13 @@ func initService(cfg Config) {
 		Handler: g,
 	}
 
-	err := tlsConfig.ListenAndServeTLS(cfg.ServiceCrt, cfg.ServiceKey)
+	var err error
+	if cfg.ServiceCrt == "" || cfg.ServiceKey == "" {
+		err = tlsConfig.ListenAndServe()
+	} else {
+		err = tlsConfig.ListenAndServeTLS(cfg.ServiceCrt, cfg.ServiceKey)
+	}
+
 	if err != nil {
 		fmt.Println("Error starting service:", err)
 	}
