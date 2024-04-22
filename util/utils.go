@@ -9,7 +9,7 @@ import (
 	"io/fs"
 	"log"
 	"os"
-	"strings"
+	"path/filepath"
 	"syscall"
 
 	"github.com/go-git/go-git/v5"
@@ -31,21 +31,20 @@ func InterfaceOfSliceToMap(source []interface{}) map[string]interface{} {
 }
 
 func WriteToFile(path string, content string) error {
-	dir := path[:strings.LastIndex(path, "/")]
-	err := CreateDirsIfNotExist(dir)
-
-	if err != nil {
+	// Ensure the directory exists
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0755); err != nil {
 		return err
 	}
 
-	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE, 0644)
+	// Open the file with truncation flag to ensure it's overwritten
+	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
 
-	_, err = file.WriteString(content)
-	if err != nil {
+	if _, err := file.WriteString(content); err != nil {
 		return err
 	}
 
