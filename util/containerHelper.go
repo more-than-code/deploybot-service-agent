@@ -91,8 +91,10 @@ func (h *ContainerHelper) StartContainer(cfg *model.DeployConfig) {
 
 	nConfig := &network.NetworkingConfig{}
 
-	if cfg.NetworkName != "" && cfg.NetworkId != "" {
-		nConfig.EndpointsConfig = map[string]*network.EndpointSettings{cfg.NetworkName: {NetworkID: cfg.NetworkId}}
+	if cfg.Networks != nil {
+		for n, i := range cfg.Networks {
+			nConfig.EndpointsConfig = map[string]*network.EndpointSettings{n: {NetworkID: i}}
+		}
 	}
 
 	resp, err := h.cli.ContainerCreate(ctx, cConfig, hConfig, nConfig, nil, cfg.ServiceName)

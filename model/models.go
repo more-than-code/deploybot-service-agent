@@ -25,8 +25,7 @@ type DeployConfig struct {
 	RestartPolicy RestartPolicy     `json:"restartPolicy" bson:",omitempty"`
 	Env           []string          `json:"env" bson:",omitempty"`
 	Ports         map[string]string `json:"ports" bson:",omitempty"`
-	NetworkId     string            `json:"networkId" bson:",omitempty"`
-	NetworkName   string            `json:"networkName" bson:",omitempty"`
+	Networks      map[string]string `json:"networks" bson:",omitempty"`
 	Command       string            `json:"command" bson:",omitempty"`
 	Links         []string          `json:"links" bson:",omitempty"`
 }
