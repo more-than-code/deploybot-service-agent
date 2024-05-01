@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 
 	"deploybot-service-agent/model"
 
@@ -58,7 +59,7 @@ func (h *ContainerHelper) StartContainer(cfg *model.DeployConfig) {
 	}
 
 	if cfg.Command != "" {
-		cConfig.Cmd = []string{cfg.Command}
+		cConfig.Cmd = strings.Split(cfg.Command, " ")
 	}
 
 	if cfg.RestartPolicy.Name == "" {
@@ -107,25 +108,6 @@ func (h *ContainerHelper) StartContainer(cfg *model.DeployConfig) {
 		log.Print(err)
 		return
 	}
-
-	// statusCh, errCh := h.cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
-
-	// select {
-	// case err := <-errCh:
-	// 	if err != nil {
-	// 		log.Print(err)
-	// 		return
-	// 	}
-	// case <-statusCh:
-	// }
-
-	// out, err := h.cli.ContainerLogs(ctx, resp.ID, dTypes.ContainerLogsOptions{ShowStdout: true})
-	// if err != nil {
-	// 	log.Print(err)
-	// 	return
-	// }
-
-	// stdcopy.StdCopy(os.Stdout, os.Stderr, out)
 }
 
 func (h *ContainerHelper) RestartContainer(ctx context.Context, containerName string) error {
