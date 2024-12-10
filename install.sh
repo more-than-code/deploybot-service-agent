@@ -78,13 +78,3 @@ EOF
 
 # Secure the service file
 chmod 644 "$SERVICE_FILE"
-
-# Reload systemd to load the new service file
-systemctl daemon-reload
-
-# Start and enable the service
-systemctl start bot_agent
-systemctl enable bot_agent
-
-# Display the status of the service
-systemctl status bot_agent
