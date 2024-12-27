@@ -61,16 +61,17 @@ Type=simple
 ExecStart=$PROGRAM_PATH start
 Restart=on-failure
 RestartSec=30s
-User=$INSTALLER_USER
+# User=$INSTALLER_USER
+Group=docker
 EnvironmentFile=$ENV_FILE
 WorkingDirectory=$BOT_AGENT_DIR
 PrivateTmp=true
-ProtectSystem=full
-ProtectHome=true
-ReadWritePaths=$BOT_AGENT_DIR
-SupplementaryGroups=docker  # Allow access to Docker
-NoNewPrivileges=true
-CapabilityBoundingSet=CAP_NET_BIND_SERVICE
+# Removed access restrictions
+# ProtectSystem=full
+# ProtectHome=true
+# ReadWritePaths=$BOT_AGENT_DIR
+# NoNewPrivileges=true
+# CapabilityBoundingSet=CAP_NET_BIND_SERVICE
 
 [Install]
 WantedBy=multi-user.target
