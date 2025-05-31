@@ -15,6 +15,11 @@ type RestartPolicy struct {
 	MaximumRetryCount int    `json:"maxiumRetryCount" bson:",omitempty"`
 }
 
+type LogConfig struct {
+	Type   string            `json:"type" bson:",omitempty"`
+	Config map[string]string `json:"config" bson:",omitempty"`
+}
+
 type DeployConfig struct {
 	ImageName     string            `json:"imageName"`
 	ImageTag      string            `json:"imageTag" bson:",omitempty"`
@@ -28,6 +33,7 @@ type DeployConfig struct {
 	Networks      map[string]string `json:"networks" bson:",omitempty"`
 	Command       string            `json:"command" bson:",omitempty"`
 	Links         []string          `json:"links" bson:",omitempty"`
+	LogConfig     *LogConfig        `json:"logConfig" bson:",omitempty"`
 }
 
 type Network struct {

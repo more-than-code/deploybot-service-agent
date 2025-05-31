@@ -81,6 +81,7 @@ func (h *ContainerHelper) StartContainer(cfg *model.DeployConfig) {
 		AutoRemove:    cfg.AutoRemove,
 		RestartPolicy: container.RestartPolicy{Name: container.RestartPolicyMode(cfg.RestartPolicy.Name), MaximumRetryCount: cfg.RestartPolicy.MaximumRetryCount},
 		Links:         cfg.Links,
+		LogConfig:     container.LogConfig{},
 	}
 
 	if cfg.Ports != nil {
@@ -98,6 +99,17 @@ func (h *ContainerHelper) StartContainer(cfg *model.DeployConfig) {
 	if cfg.VolumeMounts != nil {
 		for s, t := range cfg.VolumeMounts {
 			hConfig.Mounts = append(hConfig.Mounts, mount.Mount{Type: mount.TypeBind, Source: s, Target: t})
+		}
+	}
+
+	if cfg.LogConfig != nil {
+		hConfig.LogConfig.Type = cfg.LogConfig.Type
+
+		if cfg.LogConfig.Config != nil {
+			hConfig.LogConfig.Config = make(map[string]string, len(cfg.LogConfig.Config))
+			for k, v := range cfg.LogConfig.Config {
+				hConfig.LogConfig.Config[k] = v
+			}
 		}
 	}
 
