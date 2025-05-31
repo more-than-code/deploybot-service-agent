@@ -31,6 +31,17 @@ type ContainerHelper struct {
 	cred DhCredentials
 }
 
+type ChLogsOptions struct {
+	ShowStdout bool
+	ShowStderr bool
+	Follow     bool
+	Details    bool
+	Timestamps bool
+	Tail       string
+	Until      string
+	Since      string
+}
+
 func NewContainerHelper(dockerHost string, cred DhCredentials) *ContainerHelper {
 	cli, err := client.NewClientWithOpts(client.WithHost(dockerHost), client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -114,8 +125,19 @@ func (h *ContainerHelper) RestartContainer(ctx context.Context, containerName st
 	return h.cli.ContainerRestart(ctx, containerName, container.StopOptions{})
 }
 
-func (h *ContainerHelper) LogContainer(ctx context.Context, containerName string) (io.ReadCloser, error) {
-	return h.cli.ContainerLogs(ctx, containerName, container.LogsOptions{ShowStdout: true})
+func (h *ContainerHelper) LogContainer(ctx context.Context, containerName string, logsOptions ChLogsOptions) (io.ReadCloser, error) {
+	clogsOptions := container.LogsOptions{
+		ShowStdout: logsOptions.ShowStdout,
+		ShowStderr: logsOptions.ShowStderr,
+		Follow:     logsOptions.Follow,
+		Details:    logsOptions.Details,
+		Timestamps: logsOptions.Timestamps,
+		Tail:       logsOptions.Tail,
+		Until:      logsOptions.Until,
+		Since:      logsOptions.Since,
+	}
+
+	return h.cli.ContainerLogs(ctx, containerName, clogsOptions)
 }
 
 func (h *ContainerHelper) RemoveContainer(ctx context.Context, containerName string) error {

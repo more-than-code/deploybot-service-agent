@@ -14,7 +14,32 @@ import (
 func (s *Scheduler) GetServiceLog() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		name := ctx.Query("name")
-		out, err := s.cHelper.LogContainer(ctx, name)
+		if name == "" {
+			ctx.String(http.StatusBadRequest, "Container name is required")
+			return
+		}
+
+		ShowStdout := ctx.Query("showStdout") == "true"
+		ShowStderr := ctx.Query("showStderr") == "true"
+		Follow := ctx.Query("follow") == "true"
+		Details := ctx.Query("details") == "true"
+		Timestamps := ctx.Query("timestamps") == "true"
+		Tail := ctx.Query("tail")
+		until := ctx.Query("until")
+		since := ctx.Query("since")
+
+		chLogsOptions := util.ChLogsOptions{
+			ShowStdout: ShowStdout,
+			ShowStderr: ShowStderr,
+			Follow:     Follow,
+			Details:    Details,
+			Timestamps: Timestamps,
+			Tail:       Tail,
+			Until:      until,
+			Since:      since,
+		}
+
+		out, err := s.cHelper.LogContainer(ctx, name, chLogsOptions)
 
 		if err != nil {
 			ctx.String(http.StatusInternalServerError, err.Error())
