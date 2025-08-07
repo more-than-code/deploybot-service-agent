@@ -34,6 +34,7 @@ type DeployConfig struct {
 	Command       string            `json:"command" bson:",omitempty"`
 	Links         []string          `json:"links" bson:",omitempty"`
 	LogConfig     *LogConfig        `json:"logConfig" bson:",omitempty"`
+	ShmSize       int64             `json:"shmSize" bson:",omitempty"`
 }
 
 type Network struct {

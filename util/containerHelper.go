@@ -82,6 +82,7 @@ func (h *ContainerHelper) StartContainer(cfg *model.DeployConfig) {
 		RestartPolicy: container.RestartPolicy{Name: container.RestartPolicyMode(cfg.RestartPolicy.Name), MaximumRetryCount: cfg.RestartPolicy.MaximumRetryCount},
 		Links:         cfg.Links,
 		LogConfig:     container.LogConfig{},
+		ShmSize:       cfg.ShmSize,
 	}
 
 	if cfg.Ports != nil {
