@@ -59,8 +59,8 @@ if [ ! -f "$ENV_FILE" ]; then
   # Create new environment file
   cat << EOF > "$ENV_FILE"
 SERVICE_PORT=8002
-SERVICE_CRT=$BOT_AGENT_DIR/service.crt
-SERVICE_KEY=$BOT_AGENT_DIR/service.key
+SERVICE_CRT=/etc/letsencrypt/live/your-domain.com/fullchain.pem
+SERVICE_KEY=/etc/letsencrypt/live/your-domain.com/privkey.pem
 API_KEY=your_api_key_here
 API_BASE_URL=https://api.example.com
 DOCKER_HOST=unix:///var/run/docker.sock
@@ -72,6 +72,7 @@ EOF
   chmod 600 "$ENV_FILE"
   echo "Created environment file at $ENV_FILE"
   echo "Please edit $ENV_FILE and update the configuration values before starting the service."
+  echo "NOTE: Update SERVICE_CRT and SERVICE_KEY paths to match your actual domain certbot certificates."
 else
   # Merge with existing environment file
   echo "Existing environment file found at $ENV_FILE"
@@ -80,8 +81,8 @@ else
   # Define default values
   declare -A defaults=(
     ["SERVICE_PORT"]="8002"
-    ["SERVICE_CRT"]="$BOT_AGENT_DIR/service.crt"
-    ["SERVICE_KEY"]="$BOT_AGENT_DIR/service.key"
+    ["SERVICE_CRT"]="/etc/letsencrypt/live/your-domain.com/fullchain.pem"
+    ["SERVICE_KEY"]="/etc/letsencrypt/live/your-domain.com/privkey.pem"
     ["API_KEY"]="your_api_key_here"
     ["API_BASE_URL"]="https://api.example.com"
     ["DOCKER_HOST"]="unix:///var/run/docker.sock"
@@ -195,6 +196,30 @@ else
   echo "✓ User $INSTALLER_USER is already in docker group"
 fi
 
+# Setup certificate access for certbot certificates
+if [ -d "/etc/letsencrypt" ]; then
+  echo "Setting up certbot certificate access..."
+  
+  # Add user to ssl-cert group (if it exists) or create it
+  if ! getent group ssl-cert >/dev/null 2>&1; then
+    groupadd ssl-cert
+    echo "Created ssl-cert group"
+  fi
+  
+  # Add installer user to ssl-cert group
+  usermod -aG ssl-cert "$INSTALLER_USER"
+  
+  # Set proper permissions for letsencrypt directories
+  chgrp -R ssl-cert /etc/letsencrypt/live/ /etc/letsencrypt/archive/ 2>/dev/null || true
+  chmod -R g+rx /etc/letsencrypt/live/ /etc/letsencrypt/archive/ 2>/dev/null || true
+  
+  echo "✓ Certificate access configured for user $INSTALLER_USER"
+  echo "Note: If using certbot certificates, ensure they are readable by the ssl-cert group"
+else
+  echo "⚠ /etc/letsencrypt not found - certbot may not be installed"
+  echo "  Install certbot and generate certificates before starting the service"
+fi
+
 # Validate Docker socket access
 DOCKER_SOCK="/var/run/docker.sock"
 if [ -S "$DOCKER_SOCK" ]; then
@@ -232,11 +257,12 @@ PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=false
 ReadWritePaths=$BOT_AGENT_DIR
+ReadOnlyPaths=/etc/letsencrypt
 NoNewPrivileges=true
 # Allow binding to privileged ports if needed
 CapabilityBoundingSet=CAP_NET_BIND_SERVICE
-# Allow access to docker socket
-SupplementaryGroups=docker
+# Allow access to docker socket and SSL certificates
+SupplementaryGroups=docker ssl-cert
 
 [Install]
 WantedBy=multi-user.target
@@ -275,11 +301,14 @@ if [ "$SERVICE_RUNNING" = true ]; then
 else
   echo "Next steps:"
   echo "1. Edit configuration: sudo nano $ENV_FILE"
-  echo "2. Generate TLS certificates (for HTTPS)"
-  echo "3. Enable service: sudo systemctl enable bot_agent"
-  echo "4. Start service: sudo systemctl start bot_agent"
-  echo "5. Check status: sudo systemctl status bot_agent"
-  echo "6. View logs: sudo journalctl -u bot_agent -f"
+  echo "2. Update certificate paths in config to match your domain:"
+  echo "   SERVICE_CRT=/etc/letsencrypt/live/your-domain.com/fullchain.pem"
+  echo "   SERVICE_KEY=/etc/letsencrypt/live/your-domain.com/privkey.pem"
+  echo "3. Ensure certbot certificates exist and are accessible"
+  echo "4. Enable service: sudo systemctl enable bot_agent"
+  echo "5. Start service: sudo systemctl start bot_agent"
+  echo "6. Check status: sudo systemctl status bot_agent"
+  echo "7. View logs: sudo journalctl -u bot_agent -f"
 fi
 
 echo ""
