@@ -45,7 +45,7 @@ func main() {
 		case "env":
 			fmt.Printf("%+v\n", cfg)
 		default:
-			fmt.Sprintln("Uknown command line arguments", os.Args)
+			fmt.Println("Unknown command line arguments", os.Args)
 		}
 	} else {
 		fmt.Println("Please provide a command line argument")
@@ -90,6 +90,7 @@ func initService(cfg Config) {
 	g.GET("/services", a.GetServices())
 	g.DELETE("/service/:name", a.DeleteService())
 	g.PUT("/service", a.UpdateService())
+	g.POST("/service", a.CreateService())
 
 	// OPTIONS routes for CORS preflight requests
 	g.OPTIONS("/streamWebhook", func(c *gin.Context) { c.Status(http.StatusOK) })

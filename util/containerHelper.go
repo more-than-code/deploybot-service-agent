@@ -50,7 +50,7 @@ func NewContainerHelper(dockerHost string, cred DhCredentials) *ContainerHelper 
 	return &ContainerHelper{cli, cred}
 }
 
-func (h *ContainerHelper) StartContainer(cfg *model.DeployConfig) {
+func (h *ContainerHelper) StartContainer(cfg *model.DeployConfig) error {
 	ctx := context.Background()
 
 	h.cli.ContainerStop(ctx, cfg.ServiceName, container.StopOptions{})
@@ -59,8 +59,7 @@ func (h *ContainerHelper) StartContainer(cfg *model.DeployConfig) {
 	imageNameTag := cfg.ImageName + ":" + cfg.ImageTag
 	reader, err := h.cli.ImagePull(ctx, imageNameTag, image.PullOptions{})
 	if err != nil {
-		log.Print(err)
-		return
+		return err
 	}
 	io.Copy(os.Stdout, reader)
 
@@ -124,14 +123,14 @@ func (h *ContainerHelper) StartContainer(cfg *model.DeployConfig) {
 
 	resp, err := h.cli.ContainerCreate(ctx, cConfig, hConfig, nConfig, nil, cfg.ServiceName)
 	if err != nil {
-		log.Print(err)
-		return
+		return err
 	}
 
 	if err := h.cli.ContainerStart(ctx, resp.ID, container.StartOptions{}); err != nil {
-		log.Print(err)
-		return
+		return err
 	}
+
+	return nil
 }
 
 func (h *ContainerHelper) RestartContainer(ctx context.Context, containerName string) error {

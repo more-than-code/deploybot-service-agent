@@ -160,6 +160,22 @@ func (s *Scheduler) DeleteNetwork() gin.HandlerFunc {
 	}
 }
 
+func (s *Scheduler) CreateService() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var deployConfig model.DeployConfig
+		if err := ctx.ShouldBindJSON(&deployConfig); err != nil {
+			ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		err := s.cHelper.StartContainer(&deployConfig)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		ctx.JSON(http.StatusOK, gin.H{"status": "deployment started"})
+	}
+}
+
 func (s *Scheduler) UpdateService() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var input model.UpdateServiceInput

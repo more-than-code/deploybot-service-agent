@@ -21,7 +21,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var gTicker *time.Ticker
+// var gTicker *time.Ticker
 var gEventQueue = list.New()
 
 type SchedulerConfig struct {
@@ -124,9 +124,10 @@ func (s *Scheduler) StreamWebhookHandler() gin.HandlerFunc {
 
 		go func() {
 			var err error
-			if task.Type == types.BuildTask {
+			switch task.Type {
+			case types.BuildTask:
 				err = s.DoBuildTask(task.Config, sw.Payload.Arguments)
-			} else if task.Type == types.DeployTask {
+			case types.DeployTask:
 				err = s.DoDeployTask(task.Config, sw.Payload.Arguments)
 			}
 
