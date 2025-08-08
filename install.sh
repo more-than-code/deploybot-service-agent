@@ -52,7 +52,7 @@ FILE_URL="https://github.com/more-than-code/deploybot-service-agent/releases/dow
 # Ensure the user's home-based folder structure exists
 BOT_AGENT_DIR="$USER_HOME/.bot_agent"
 mkdir -p "$BOT_AGENT_DIR"
-chmod 700 "$BOT_AGENT_DIR"
+chmod 755 "$BOT_AGENT_DIR"
 
 # Create or update environment configuration
 if [ ! -f "$ENV_FILE" ]; then
@@ -235,8 +235,56 @@ else
   echo "  Make sure Docker is installed and running"
 fi
 
-# Set proper ownership for the bot agent directory
+# Set proper ownership and permissions for the bot agent directory
 chown -R "$INSTALLER_USER:docker" "$BOT_AGENT_DIR"
+chmod -R 755 "$BOT_AGENT_DIR"
+chmod 600 "$ENV_FILE"  # Keep config file secure
+
+# Ensure user home directory has proper permissions for service operations
+echo "Setting up home directory permissions for service operations..."
+USER_HOME_PERMS=$(stat -c "%a" "$USER_HOME")
+if [ "$USER_HOME_PERMS" -lt 755 ]; then
+  echo "Adjusting home directory permissions to allow service access..."
+  chmod 755 "$USER_HOME"
+  echo "✓ Home directory permissions updated: $(stat -c "%a" "$USER_HOME")"
+else
+  echo "✓ Home directory permissions are adequate: $USER_HOME_PERMS"
+fi
+
+# Test directory write permissions for bot agent directory
+if ! sudo -u "$INSTALLER_USER" test -w "$BOT_AGENT_DIR"; then
+  echo "⚠ Warning: $INSTALLER_USER may not have write access to $BOT_AGENT_DIR"
+  echo "Attempting to fix permissions..."
+  chmod 775 "$BOT_AGENT_DIR"
+  if ! sudo -u "$INSTALLER_USER" test -w "$BOT_AGENT_DIR"; then
+    echo "✗ Failed to set write permissions for $BOT_AGENT_DIR"
+    echo "The service may not be able to write logs or temporary files"
+  else
+    echo "✓ Bot agent directory write permissions verified"
+  fi
+else
+  echo "✓ Bot agent directory write permissions verified"
+fi
+
+# Test home directory write permissions for creating config directories
+if ! sudo -u "$INSTALLER_USER" test -w "$USER_HOME"; then
+  echo "⚠ Warning: Service may not be able to create config directories in $USER_HOME"
+  echo "This is needed for creating SWAG config directories and mounting them"
+  echo "Current home directory permissions: $(ls -ld $USER_HOME)"
+else
+  echo "✓ Home directory write permissions verified for config creation"
+fi
+
+# Test creating a config directory structure (simulate SWAG config creation)
+TEST_CONFIG_DIR="$USER_HOME/test_config"
+if sudo -u "$INSTALLER_USER" mkdir -p "$TEST_CONFIG_DIR" 2>/dev/null; then
+  sudo -u "$INSTALLER_USER" rmdir "$TEST_CONFIG_DIR"
+  echo "✓ Service can create config directories in home directory"
+else
+  echo "⚠ Warning: Service cannot create config directories in $USER_HOME"
+  echo "This may prevent SWAG configuration from working properly"
+  echo "Manual fix: sudo chmod 755 $USER_HOME"
+fi
 
 # Secure the service file creation
 cat << EOF > "$SERVICE_FILE"
@@ -256,7 +304,7 @@ WorkingDirectory=$BOT_AGENT_DIR
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=false
-ReadWritePaths=$BOT_AGENT_DIR
+ReadWritePaths=$BOT_AGENT_DIR $USER_HOME
 ReadOnlyPaths=/etc/letsencrypt
 NoNewPrivileges=true
 # Allow binding to privileged ports if needed
@@ -315,7 +363,19 @@ echo ""
 echo "Security Information:"
 echo "• Service runs as user: $INSTALLER_USER"
 echo "• Service group: docker"
+echo "• Working directory: $BOT_AGENT_DIR"
+echo "• Directory permissions: $(ls -ld $BOT_AGENT_DIR)"
+echo "• Home directory permissions: $(ls -ld $USER_HOME)"
 echo "• Config file: $ENV_FILE (readable only by owner)"
+echo "• Config file permissions: $(ls -l $ENV_FILE)"
 echo "• Binary integrity: $([ -f "/tmp/bot_agent.sha256" ] && echo "Verified" || echo "Skipped")"
 echo "• Systemd hardening: Enabled (PrivateTmp, ProtectSystem, etc.)"
+echo "• Home directory access: Enabled for config creation (SWAG, etc.)"
+echo ""
+echo "If the service fails to start, check:"
+echo "1. Directory permissions: ls -la $BOT_AGENT_DIR"
+echo "2. Home directory permissions: ls -ld $USER_HOME"
+echo "3. Service logs: sudo journalctl -u bot_agent -f"
+echo "4. User can write to home directory: sudo -u $INSTALLER_USER touch $USER_HOME/test && rm $USER_HOME/test"
+echo "5. User can create config directories: sudo -u $INSTALLER_USER mkdir $USER_HOME/test_config && rmdir $USER_HOME/test_config"
 echo "=============================================="
