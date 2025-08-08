@@ -176,7 +176,7 @@ fi
 echo "Download completed successfully"
 
 # Make the downloaded file executable and secure
-chmod 750 "$PROGRAM_PATH"
+chmod 755 "$PROGRAM_PATH"
 chown root:root "$PROGRAM_PATH"
 
 # Check if service is currently running
