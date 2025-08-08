@@ -230,7 +230,7 @@ EnvironmentFile=$ENV_FILE
 WorkingDirectory=$BOT_AGENT_DIR
 PrivateTmp=true
 ProtectSystem=strict
-ProtectHome=true
+ProtectHome=false
 ReadWritePaths=$BOT_AGENT_DIR
 NoNewPrivileges=true
 # Allow binding to privileged ports if needed
