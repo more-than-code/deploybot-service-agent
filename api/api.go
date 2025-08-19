@@ -6,6 +6,7 @@ import (
 	"deploybot-service-agent/model"
 	"deploybot-service-agent/util"
 	"net/http"
+	"strings"
 
 	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/gin-gonic/gin"
@@ -13,7 +14,7 @@ import (
 
 func (s *Scheduler) GetServiceLog() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		name := ctx.Query("name")
+		name := resolveParam(ctx, "name")
 		if name == "" {
 			ctx.String(http.StatusBadRequest, "Container name is required")
 			return
@@ -61,7 +62,7 @@ func (s *Scheduler) GetServiceLog() gin.HandlerFunc {
 
 func (s *Scheduler) GetDiskInfo() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		path := ctx.Query("path")
+		path := ctx.Param("path")
 		info, err := util.GetDiskInfo(path)
 
 		if err != nil {
@@ -202,7 +203,7 @@ func (s *Scheduler) UpdateService() gin.HandlerFunc {
 
 func (s *Scheduler) DeleteService() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		name := ctx.Query("name")
+		name := ctx.Param("name")
 
 		err := s.cHelper.RemoveContainer(ctx, name)
 
@@ -216,7 +217,7 @@ func (s *Scheduler) DeleteService() gin.HandlerFunc {
 
 func (s *Scheduler) GetService() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		name := ctx.Query("name")
+		name := ctx.Param("name")
 
 		res, err := s.cHelper.GetContainer(ctx, name)
 
@@ -245,4 +246,14 @@ func (s *Scheduler) HealthCheckHandler() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 
 	}
+}
+
+func resolveParam(c *gin.Context, param string) string {
+	// preferred: path parameter
+	value := c.Param(param)
+	if value == "" {
+		// fallback for backward compatibility
+		value = c.Query(param)
+	}
+	return strings.TrimPrefix(value, "/")
 }

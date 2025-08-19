@@ -79,7 +79,8 @@ func initService(cfg Config) {
 	g.POST("/streamWebhook", a.StreamWebhookHandler())
 	g.GET("/healthCheck", a.HealthCheckHandler())
 	g.GET("/serviceLogs", a.GetServiceLog())
-	g.GET("/diskInfo", a.GetDiskInfo())
+	g.GET("/serviceLogs/:name", a.GetServiceLog())
+	g.GET("/diskInfo/:path", a.GetDiskInfo())
 	g.DELETE("/images", a.DeleteImages())
 	g.DELETE("/builderCache", a.DeleteBuilderCache())
 	g.GET("/network/:name", a.GetNetwork())
@@ -89,7 +90,7 @@ func initService(cfg Config) {
 	g.GET("/service/:name", a.GetService())
 	g.GET("/services", a.GetServices())
 	g.DELETE("/service/:name", a.DeleteService())
-	g.PUT("/service", a.UpdateService())
+	g.PUT("/service/:name", a.UpdateService())
 	g.POST("/service", a.CreateService())
 
 	// OPTIONS routes for CORS preflight requests

@@ -96,6 +96,24 @@ func (h *ContainerHelper) StartContainer(cfg *model.DeployConfig) error {
 		}
 	}
 
+	if cfg.Files != nil {
+		for name, content := range cfg.Files {
+			err = WriteToFile(name, content)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	if cfg.VolumeMounts != nil {
+		for srcDir := range cfg.VolumeMounts {
+			err = CreateDirsIfNotExist(srcDir)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	if cfg.VolumeMounts != nil {
 		for s, t := range cfg.VolumeMounts {
 			hConfig.Mounts = append(hConfig.Mounts, mount.Mount{Type: mount.TypeBind, Source: s, Target: t})
