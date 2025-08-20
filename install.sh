@@ -205,16 +205,33 @@ if [ -d "/etc/letsencrypt" ]; then
     groupadd ssl-cert
     echo "Created ssl-cert group"
   fi
-  
+
   # Add installer user to ssl-cert group
   usermod -aG ssl-cert "$INSTALLER_USER"
-  
-  # Set proper permissions for letsencrypt directories
-  chgrp -R ssl-cert /etc/letsencrypt/live/ /etc/letsencrypt/archive/ 2>/dev/null || true
-  chmod -R g+rx /etc/letsencrypt/live/ /etc/letsencrypt/archive/ 2>/dev/null || true
-  
-  echo "✓ Certificate access configured for user $INSTALLER_USER"
-  echo "Note: If using certbot certificates, ensure they are readable by the ssl-cert group"
+
+  # Carefully set group ownership and permissions so the ssl-cert group can read
+  # private keys while keeping keys restricted from other users.
+  # Directories: 750 (rwx for owner, rx for group)
+  # Files (including privkey.pem): 640 (rw for owner, r for group)
+  if [ -d /etc/letsencrypt ]; then
+    # Set group ownership to ssl-cert recursively (safe to run as root)
+    find /etc/letsencrypt -exec chgrp ssl-cert {} \; 2>/dev/null || true
+
+    # Directories: ensure group can traverse/read
+    find /etc/letsencrypt -type d -exec chmod 750 {} \; 2>/dev/null || true
+
+    # Files: ensure group has read, owner has read/write, others none
+    find /etc/letsencrypt -type f -exec chmod 640 {} \; 2>/dev/null || true
+
+    # Some systems may use symlinks under /etc/letsencrypt/live -> ../archive
+    # Ensure targets also have correct perms (find will follow and act on actual files above)
+
+    echo "✓ Certificate access configured: group=ssl-cert, dirs=750, files=640"
+    echo "Note: $INSTALLER_USER was added to the ssl-cert group (may require logout/login)."
+    echo "If the service is started by systemd, SupplementaryGroups=ssl-cert is set in the unit"
+  else
+    echo "⚠ /etc/letsencrypt exists but could not be configured"
+  fi
 else
   echo "⚠ /etc/letsencrypt not found - certbot may not be installed"
   echo "  Install certbot and generate certificates before starting the service"

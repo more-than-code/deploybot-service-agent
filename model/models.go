@@ -12,7 +12,7 @@ type BuildConfig struct {
 
 type RestartPolicy struct {
 	Name              string `json:"name" bson:",omitempty"`
-	MaximumRetryCount int    `json:"maxiumRetryCount" bson:",omitempty"`
+	MaximumRetryCount int    `json:"maximumRetryCount" bson:",omitempty"`
 }
 
 type LogConfig struct {
