@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	types "deploybot-service-agent/deploybot-types"
@@ -171,9 +172,13 @@ func (s *Scheduler) DoDeployTask(conf interface{}, arguments []string) error {
 
 	if c.VolumeMounts != nil {
 		for srcDir := range c.VolumeMounts {
-			err = util.CreateDirsIfNotExist(srcDir)
-			if err != nil {
-				return err
+			isBind := strings.HasPrefix(srcDir, "/") || strings.HasPrefix(srcDir, ".") || strings.Contains(srcDir, string(os.PathSeparator))
+
+			if isBind {
+				err = util.CreateDirsIfNotExist(srcDir)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}

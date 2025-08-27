@@ -107,16 +107,29 @@ func (h *ContainerHelper) StartContainer(cfg *model.DeployConfig) error {
 
 	if cfg.VolumeMounts != nil {
 		for srcDir := range cfg.VolumeMounts {
-			err = CreateDirsIfNotExist(srcDir)
-			if err != nil {
-				return err
+			// If the source looks like a host path (absolute or relative path),
+			// ensure the directory exists. Otherwise treat it as a named volume
+			// and don't attempt to create directories on the host.
+			isBind := strings.HasPrefix(srcDir, "/") || strings.HasPrefix(srcDir, ".") || strings.Contains(srcDir, string(os.PathSeparator))
+			if isBind {
+				err = CreateDirsIfNotExist(srcDir)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
 
 	if cfg.VolumeMounts != nil {
 		for s, t := range cfg.VolumeMounts {
-			hConfig.Mounts = append(hConfig.Mounts, mount.Mount{Type: mount.TypeBind, Source: s, Target: t})
+			// decide whether this is a host bind or a named volume
+			isBind := strings.HasPrefix(s, "/") || strings.HasPrefix(s, ".") || strings.Contains(s, string(os.PathSeparator))
+			if isBind {
+				hConfig.Mounts = append(hConfig.Mounts, mount.Mount{Type: mount.TypeBind, Source: s, Target: t})
+			} else {
+				// named volume
+				hConfig.Mounts = append(hConfig.Mounts, mount.Mount{Type: mount.TypeVolume, Source: s, Target: t})
+			}
 		}
 	}
 
