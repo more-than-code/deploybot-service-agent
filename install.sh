@@ -16,7 +16,7 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # Check if required commands exist
-REQUIRED_COMMANDS="curl systemctl usermod groups getent logname"
+REQUIRED_COMMANDS="curl systemctl usermod groups getent sudo sha256sum id"
 for cmd in $REQUIRED_COMMANDS; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
     echo "Error: Required command '$cmd' not found"
@@ -40,8 +40,41 @@ fi
 echo "✓ Pre-installation checks passed"
 
 # Define paths
-INSTALLER_USER=$(logname)  # Dynamically identify the user who initiated the script
+# Determine which non-root user should own and run the service. Allow override via TARGET_USER.
+if [ -n "${TARGET_USER:-}" ]; then
+  INSTALLER_USER="$TARGET_USER"
+elif [ -n "${SUDO_USER:-}" ] && [ "$SUDO_USER" != "root" ]; then
+  INSTALLER_USER="$SUDO_USER"
+else
+  # Fall back to logname (may fail in non-interactive sudo sessions) then to the current user
+  INSTALLER_USER=$(logname 2>/dev/null || true)
+  if [ -z "$INSTALLER_USER" ] || [ "$INSTALLER_USER" = "root" ]; then
+    INSTALLER_USER=${USER:-root}
+  fi
+fi
+
+if ! echo "$INSTALLER_USER" | grep -qE '^[a-z_][a-z0-9_-]{0,31}$'; then
+  echo "Error: Invalid username '$INSTALLER_USER'."
+  exit 1
+fi
+
+if [ "$INSTALLER_USER" = "root" ]; then
+  echo "Error: Could not determine a non-root user. Set TARGET_USER to a valid account."
+  exit 1
+fi
+
+if ! getent passwd "$INSTALLER_USER" >/dev/null 2>&1; then
+  echo "Error: Unable to determine installation user '$INSTALLER_USER'. Set TARGET_USER to a valid account."
+  exit 1
+fi
+
 USER_HOME=$(getent passwd "$INSTALLER_USER" | cut -d: -f6)
+if [ -z "$USER_HOME" ] || [ ! -d "$USER_HOME" ]; then
+  echo "Error: Home directory for user '$INSTALLER_USER' not found."
+  exit 1
+fi
+
+echo "Installing Bot Agent for user '$INSTALLER_USER' (override with TARGET_USER)."
 PROGRAM_PATH="/usr/local/bin/bot_agent"
 SERVICE_FILE="/etc/systemd/system/bot_agent.service"
 ENV_FILE="$USER_HOME/.bot_agent/env.conf"
@@ -58,7 +91,7 @@ chmod 755 "$BOT_AGENT_DIR"
 if [ ! -f "$ENV_FILE" ]; then
   # Create new environment file
   cat << EOF > "$ENV_FILE"
-SERVICE_PORT=8002
+SERVICE_PORT=:8081
 SERVICE_CRT=/etc/letsencrypt/live/your-domain.com/fullchain.pem
 SERVICE_KEY=/etc/letsencrypt/live/your-domain.com/privkey.pem
 API_KEY=your_api_key_here
@@ -80,7 +113,7 @@ else
   
   # Define default values
   declare -A defaults=(
-    ["SERVICE_PORT"]="8002"
+    ["SERVICE_PORT"]=":8081"
     ["SERVICE_CRT"]="/etc/letsencrypt/live/your-domain.com/fullchain.pem"
     ["SERVICE_KEY"]="/etc/letsencrypt/live/your-domain.com/privkey.pem"
     ["API_KEY"]="your_api_key_here"
@@ -187,16 +220,24 @@ if systemctl is-active --quiet bot_agent; then
   echo "Service is currently running, will restart after installation"
 fi
 
-# Ensure the installer user is in the docker group
-if ! groups "$INSTALLER_USER" | grep -q docker; then
+# Ensure the installer user is in the docker group. Create the group if it doesn't exist.
+if ! getent group docker >/dev/null 2>&1; then
+  echo "Creating 'docker' group as it does not exist"
+  groupadd docker || true
+fi
+
+if ! groups "$INSTALLER_USER" | grep -qw "docker"; then
   echo "Adding user $INSTALLER_USER to docker group..."
-  usermod -aG docker "$INSTALLER_USER"
-  echo "Note: $INSTALLER_USER needs to log out and back in for docker group membership to take effect"
+  usermod -aG docker "$INSTALLER_USER" || echo "Warning: failed to add $INSTALLER_USER to docker group"
+  echo "Note: $INSTALLER_USER may need to log out and back in for docker group membership to take effect"
 else
   echo "✓ User $INSTALLER_USER is already in docker group"
 fi
 
-# Setup certificate access for certbot certificates
+# Track whether ssl-cert supplementary group is needed/available
+SSL_CERT_GROUP_AVAILABLE=false
+
+# Setup certificate access for certbot certificates (optional)
 if [ -d "/etc/letsencrypt" ]; then
   echo "Setting up certbot certificate access..."
   
@@ -208,6 +249,10 @@ if [ -d "/etc/letsencrypt" ]; then
 
   # Add installer user to ssl-cert group
   usermod -aG ssl-cert "$INSTALLER_USER"
+
+  if getent group ssl-cert >/dev/null 2>&1; then
+    SSL_CERT_GROUP_AVAILABLE=true
+  fi
 
   # Carefully set group ownership and permissions so the ssl-cert group can read
   # private keys while keeping keys restricted from other users.
@@ -253,7 +298,12 @@ else
 fi
 
 # Set proper ownership and permissions for the bot agent directory
-chown -R "$INSTALLER_USER:docker" "$BOT_AGENT_DIR"
+if getent group docker >/dev/null 2>&1; then
+  chown -R "$INSTALLER_USER:docker" "$BOT_AGENT_DIR"
+else
+  # Fall back to user's primary group
+  chown -R "$INSTALLER_USER:$INSTALLER_USER" "$BOT_AGENT_DIR" 2>/dev/null || chown -R "$INSTALLER_USER" "$BOT_AGENT_DIR"
+fi
 chmod -R 755 "$BOT_AGENT_DIR"
 chmod 600 "$ENV_FILE"  # Keep config file secure
 
@@ -304,6 +354,32 @@ else
 fi
 
 # Secure the service file creation
+SERVICE_GROUP=$(id -gn "$INSTALLER_USER" 2>/dev/null || echo "$INSTALLER_USER")
+
+SUPPL_GROUPS_LIST=()
+
+if getent group docker >/dev/null 2>&1; then
+  SUPPL_GROUPS_LIST+=("docker")
+fi
+
+if [ "$SSL_CERT_GROUP_AVAILABLE" = true ] && getent group ssl-cert >/dev/null 2>&1; then
+  SUPPL_GROUPS_LIST+=("ssl-cert")
+fi
+
+if [ ${#SUPPL_GROUPS_LIST[@]} -gt 0 ]; then
+  SUPPL_GROUPS=$(printf "%s " "${SUPPL_GROUPS_LIST[@]}")
+  SUPPL_GROUPS=${SUPPL_GROUPS% }
+  SUPPLEMENTARY_GROUPS_DIRECTIVE="SupplementaryGroups=$SUPPL_GROUPS"
+else
+  SUPPL_GROUPS=""
+  SUPPLEMENTARY_GROUPS_DIRECTIVE=""
+fi
+
+READ_ONLY_PATHS_DIRECTIVE=""
+if [ "$SSL_CERT_GROUP_AVAILABLE" = true ]; then
+  READ_ONLY_PATHS_DIRECTIVE="ReadOnlyPaths=/etc/letsencrypt"
+fi
+
 cat << EOF > "$SERVICE_FILE"
 [Unit]
 Description=BotAgent@$VERSION
@@ -315,19 +391,19 @@ ExecStart=$PROGRAM_PATH start
 Restart=on-failure
 RestartSec=30s
 User=$INSTALLER_USER
-Group=docker
-EnvironmentFile=$ENV_FILE
+Group=$SERVICE_GROUP
+EnvironmentFile=-$ENV_FILE
 WorkingDirectory=$BOT_AGENT_DIR
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=false
 ReadWritePaths=$BOT_AGENT_DIR $USER_HOME
-ReadOnlyPaths=/etc/letsencrypt
+$READ_ONLY_PATHS_DIRECTIVE
 NoNewPrivileges=true
 # Allow binding to privileged ports if needed
 CapabilityBoundingSet=CAP_NET_BIND_SERVICE
 # Allow access to docker socket and SSL certificates
-SupplementaryGroups=docker ssl-cert
+$SUPPLEMENTARY_GROUPS_DIRECTIVE
 
 [Install]
 WantedBy=multi-user.target
@@ -379,7 +455,8 @@ fi
 echo ""
 echo "Security Information:"
 echo "• Service runs as user: $INSTALLER_USER"
-echo "• Service group: docker"
+echo "• Primary group: $SERVICE_GROUP"
+echo "• Supplementary groups: ${SUPPL_GROUPS:-"(none)"}"
 echo "• Working directory: $BOT_AGENT_DIR"
 echo "• Directory permissions: $(ls -ld $BOT_AGENT_DIR)"
 echo "• Home directory permissions: $(ls -ld $USER_HOME)"
