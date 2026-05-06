@@ -53,9 +53,6 @@ func NewContainerHelper(dockerHost string, cred DhCredentials) *ContainerHelper 
 func (h *ContainerHelper) StartContainer(cfg *model.DeployConfig) error {
 	ctx := context.Background()
 
-	h.cli.ContainerStop(ctx, cfg.ServiceName, container.StopOptions{})
-	h.cli.ContainerRemove(ctx, cfg.ServiceName, container.RemoveOptions{})
-
 	imageNameTag := cfg.ImageName + ":" + cfg.ImageTag
 	reader, err := h.cli.ImagePull(ctx, imageNameTag, image.PullOptions{})
 	if err != nil {
@@ -151,6 +148,10 @@ func (h *ContainerHelper) StartContainer(cfg *model.DeployConfig) error {
 			nConfig.EndpointsConfig = map[string]*network.EndpointSettings{n: {NetworkID: i}}
 		}
 	}
+
+	// If a container with the same name is already running, stop and remove it
+	h.cli.ContainerStop(ctx, cfg.ServiceName, container.StopOptions{})
+	h.cli.ContainerRemove(ctx, cfg.ServiceName, container.RemoveOptions{})
 
 	resp, err := h.cli.ContainerCreate(ctx, cConfig, hConfig, nConfig, nil, cfg.ServiceName)
 	if err != nil {
