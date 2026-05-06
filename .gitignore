@@ -9,3 +9,7 @@ projects
 bot_agent*
 
 *.http
+
+.agents
+tasks
+AGENTS.md
